@@ -11,7 +11,10 @@ import numpy as np
 import pandas as pd
 
 from .config import DATA_PROCESSED, HORIZONS, TRADING_DAYS
-from .labels import bear_market_labels, make_target, stress_labels
+from .labels import bear_market_labels, make_target, merge_bear_episodes, stress_labels
+
+# Targets are built for these labels
+TARGET_LABELS = ("bear", "bear_merged", "stressed")
 
 MOMENTUM_WINDOWS = {"1m": 21, "3m": 63, "6m": 126, "12m": 252}
 
@@ -66,8 +69,9 @@ def build_labels(df: pd.DataFrame) -> pd.DataFrame:
         bear_price = bear_price.reindex(df.index).ffill()
 
     labels = pd.DataFrame(index=df.index)
-    labels["bear"] = bear_market_labels(bear_price, method="peak_to_trough")
-    labels["bear_recovery"] = bear_market_labels(bear_price, method="recovery")
+    labels["bear"] = bear_market_labels(bear_price, method="peak_to_trough")        # main label
+    labels["bear_merged"] = merge_bear_episodes(labels["bear"], bear_price)         # robustness label
+    labels["bear_recovery"] = bear_market_labels(bear_price, method="recovery")     # causal state
     st = stress_labels(df["gspc_close"])
     labels["stressed"] = st["stressed"]
     labels["stress_threshold"] = st["stress_threshold"]
@@ -77,10 +81,10 @@ def build_labels(df: pd.DataFrame) -> pd.DataFrame:
 def build_model_table(df: pd.DataFrame, horizons=HORIZONS) -> pd.DataFrame:
     feats = build_features(df)
     labels = build_labels(df)
-    targets = []
-    for h in horizons:
-        targets.append(make_target(labels["bear"], h))
-        targets.append(make_target(labels["stressed"], h))
+    # Causal "still in a 20% drawdown and not yet back to the old high" flag, known at day t.
+    # Lets models learn that a rally deep below the peak is suspicious, without changing the label.
+    feats["below_peak_regime"] = labels["bear_recovery"].astype(float)
+    targets = [make_target(labels[name], h) for h in horizons for name in TARGET_LABELS]
     return pd.concat([feats, labels, *targets], axis=1)
 
 
@@ -91,7 +95,7 @@ def main() -> None:
     table.to_parquet(out)
     print(f"Saved {table.shape[0]} rows x {table.shape[1]} cols -> {out}")
     print("\nShare of days in each regime:")
-    print(table[["bear", "bear_recovery", "stressed"]].mean().round(3).to_string())
+    print(table[["bear", "bear_merged", "bear_recovery", "stressed"]].mean().round(3).to_string())
 
 
 if __name__ == "__main__":

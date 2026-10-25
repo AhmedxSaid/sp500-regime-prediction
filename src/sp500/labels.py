@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 
 from .config import (
+    BEAR_MERGE_MAX_GAP,
     BEAR_THRESHOLD,
     STRESS_MIN_HISTORY,
     STRESS_QUANTILE,
@@ -63,6 +64,51 @@ def bear_market_labels(
 
     out = pd.Series(bear.astype("int8"), index=s.index, name=f"bear_{method}")
     return out.reindex(close.index)
+
+
+def merge_bear_episodes(
+    bear: pd.Series, close: pd.Series, max_gap: int = BEAR_MERGE_MAX_GAP
+) -> pd.Series:
+    """Merge bear markets separated by a short, failed rally (robustness label).
+
+    Two consecutive bear episodes are merged (the bull days between them become bear) when
+      - the bull gap between them is at most `max_gap` trading days, and
+      - price never closes above the peak where the (merged) bear started.
+    Uses hindsight, like `bear_market_labels(method="peak_to_trough")`: LABEL only.
+    """
+    s = bear.fillna(0).astype(int).to_numpy().copy()
+    price = close.reindex(bear.index).ffill().to_numpy(dtype=float)
+    n = len(s)
+
+    # (start, end) positions of each run of 1s
+    runs, i = [], 0
+    while i < n:
+        if s[i] == 1:
+            j = i
+            while j + 1 < n and s[j + 1] == 1:
+                j += 1
+            runs.append([i, j])
+            i = j + 1
+        else:
+            i += 1
+
+    merged = []
+    for start, end in runs:
+        if merged:
+            prev_start, prev_end = merged[-1]
+            gap = start - prev_end - 1
+            peak = price[prev_start]
+            gap_max = np.nanmax(price[prev_end + 1 : start]) if gap > 0 else -np.inf
+            if gap <= max_gap and gap_max <= peak:
+                merged[-1][1] = end
+                continue
+        merged.append([start, end])
+
+    out = np.zeros(n, dtype="int8")
+    for start, end in merged:
+        out[start : end + 1] = 1
+    result = pd.Series(out, index=bear.index, name="bear_merged")
+    return result.where(bear.notna())
 
 
 def realized_vol(close: pd.Series, window: int = STRESS_WINDOW) -> pd.Series:

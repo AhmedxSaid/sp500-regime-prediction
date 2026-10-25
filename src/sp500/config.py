@@ -30,6 +30,10 @@ FFILL_LIMIT = 2
 
 # Regime label settings
 BEAR_THRESHOLD = 0.20          # 20% drawdown
+# Robustness label: merge two bear markets if the rally between them lasts at most this many
+# trading days (~6 months) and never gets back above the first bear's starting peak.
+# Fixed on 2026-10-25 BEFORE any model results; do not tune it.
+BEAR_MERGE_MAX_GAP = 126
 STRESS_WINDOW = 21             # days for realized volatility
 STRESS_QUANTILE = 0.80         # percentile of past realized volatility
 STRESS_MIN_HISTORY = 5 * TRADING_DAYS

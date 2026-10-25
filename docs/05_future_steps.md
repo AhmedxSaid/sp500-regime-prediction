@@ -9,7 +9,7 @@
 
 ## 5.2 Baselines (any model must beat these)
 
-1. **Persistence:** future regime = current regime (the causal `recovery` bear state / current stress state).
+1. **Persistence:** future regime = current regime (the causal `below_peak_regime` feature for bear / current stress state).
 2. **Threshold rule:** bear if price < 200-day MA; stressed if realized volatility is above its threshold today.
 3. **2-state Hidden Markov Model** on daily returns (e.g. `hmmlearn`), fitted on training data only.
 
@@ -31,6 +31,7 @@
 ## 5.5 Interpretation and robustness
 
 - SHAP values / feature importance.
+- **Main vs. robustness bear label:** report every bear result on both `target_bear_h*` (main) and `target_bear_merged_h*` (robustness). The conclusion "model beats baselines" should hold on both. Keep the merge gap fixed at 126 days.
 - Vary the label thresholds (15/20/25% drawdown; 75/80/90th volatility percentile), the horizon *h* (5, 10, 21, 63) and the start date.
 - Add feature groups one at a time (VIX term structure → sector ETFs → breadth) and keep a group only if it improves out-of-sample results.
 

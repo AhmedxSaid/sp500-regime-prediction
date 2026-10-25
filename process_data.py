@@ -33,7 +33,10 @@ sys.path.insert(0, str(ROOT / "src"))  # works without `pip install -e .`
 
 from sp500.config import DATA_PROCESSED, HOLDOUT_START, HORIZONS, REPORTS  # noqa: E402
 from sp500.data_prep import build_dataset  # noqa: E402
-from sp500.features import build_model_table  # noqa: E402
+from sp500.features import TARGET_LABELS, build_model_table  # noqa: E402
+
+BEAR_LABELS = ("bear", "bear_merged")          # hindsight labels (main + robustness)
+ALL_LABELS = ("bear", "bear_merged", "bear_recovery", "stressed")
 from sp500.labels import episodes  # noqa: E402
 
 KNOWN_BEAR_MARKETS = {
@@ -56,7 +59,7 @@ def run_checks(table: pd.DataFrame, daily: pd.DataFrame, horizons) -> list[tuple
 
     # 1. Targets are exactly the label shifted forward by h (no look-ahead in features)
     for h in horizons:
-        for label in ("bear", "stressed"):
+        for label in TARGET_LABELS:
             col = f"target_{label}_h{h}"
             expected = table[label].shift(-h)
             ok = table[col].equals(expected) or (
@@ -72,7 +75,7 @@ def run_checks(table: pd.DataFrame, daily: pd.DataFrame, horizons) -> list[tuple
     cut = pd.Timestamp("2008-06-30")
     truncated = build_model_table(daily.loc[:cut], horizons=horizons)
     point_in_time = [c for c in table.columns
-                     if not c.startswith("target_") and c not in ("bear",)]  # 'bear' uses hindsight by design
+                     if not c.startswith("target_") and c not in BEAR_LABELS]  # these use hindsight by design
     a = table.loc[:cut, point_in_time]
     b = truncated[point_in_time]
     diff_cols = [c for c in point_in_time
@@ -83,16 +86,21 @@ def run_checks(table: pd.DataFrame, daily: pd.DataFrame, horizons) -> list[tuple
     # 3. Known bear markets are captured (the bear label covers most of each window).
     #    Reported as WARN, not FAIL: the 20% rule ends a bear after any 20% rally, so long bears
     #    with big bear-market rallies (1929-32, 2000-02) get split. That is a labeling choice.
-    for name, (a, b) in KNOWN_BEAR_MARKETS.items():
-        window = table.loc[a:b, "bear"].dropna()
-        share = window.mean() if len(window) else 0.0
-        checks.append((f"bear label covers {name}", "PASS" if share >= 0.8 else "WARN",
-                       f"{share:.0%} of days labeled bear"))
+    for label in BEAR_LABELS:
+        for name, (a, b) in KNOWN_BEAR_MARKETS.items():
+            window = table.loc[a:b, label].dropna()
+            share = window.mean() if len(window) else 0.0
+            checks.append((f"`{label}` covers {name}", "PASS" if share >= 0.8 else "WARN",
+                           f"{share:.0%} of days labeled bear"))
+
+    # 3b. Merging only ever adds bear days, never removes them
+    checks.append(("`bear_merged` >= `bear` on every day",
+                   bool((table["bear_merged"].fillna(0) >= table["bear"].fillna(0)).all()), ""))
 
     # 4. Value ranges
     checks.append(("drawdown is between -1 and 0", bool(table["drawdown"].dropna().between(-1, 0).all()), ""))
     checks.append(("realized vol is non-negative", bool((table["rv_21d"].dropna() >= 0).all()), ""))
-    for col in ("bear", "bear_recovery", "stressed"):
+    for col in ALL_LABELS:
         vals = {int(v) for v in table[col].dropna().unique()}
         checks.append((f"{col} only takes values 0/1", vals <= {0, 1}, str(sorted(vals))))
     checks.append(("dates are unique and sorted", table.index.is_unique and table.index.is_monotonic_increasing, ""))
@@ -138,21 +146,33 @@ def write_summary(path: Path, daily, table, quality, checks, horizons, feature_c
         "| Label | Share of days | Episodes | Median length (days) | Longest (days) |",
         "|---|---|---|---|---|",
     ]
-    for col in ("bear", "bear_recovery", "stressed"):
+    for col in ALL_LABELS:
         ep = episodes(table[col])
         lines.append(
             f"| `{col}` | {table[col].mean():.1%} | {len(ep)} | "
             f"{ep['days'].median():.0f} | {ep['days'].max():.0f} |"
         )
 
-    lines += ["", "### Bear markets found (`bear`, peak to trough)", "",
-              "| Start | End | Trading days |", "|---|---|---|"]
+    lines += ["", "- `bear`: **main label**. Standard 20% rule, peak to trough.",
+              "- `bear_merged`: **robustness label**. `bear`, with bear markets merged when the rally "
+              "between them lasts at most 126 trading days and stays below the starting peak.",
+              "- `bear_recovery`: causal \"20% down and not yet back to the old high\". Used as the "
+              "feature `below_peak_regime`, not as a target.",
+              "- `stressed`: 21-day realized vol above the expanding 80th percentile of past vol."]
+
+    merged_eps = episodes(table["bear_merged"])
+    lines += ["", "### Bear markets found", "",
+              "`bear` (main) episodes. The last column shows which `bear_merged` episode each belongs to; "
+              "rows sharing a number were merged.", "",
+              "| Start | End | Trading days | Merged episode |", "|---|---|---|---|"]
     for _, row in episodes(table["bear"]).iterrows():
-        lines.append(f"| {fmt_date(row['start'])} | {fmt_date(row['end'])} | {row['days']} |")
+        k = merged_eps.index[(merged_eps["start"] <= row["start"]) & (merged_eps["end"] >= row["end"])]
+        lines.append(f"| {fmt_date(row['start'])} | {fmt_date(row['end'])} | {row['days']} | "
+                     f"{int(k[0]) + 1 if len(k) else ''} |")
 
     lines += ["", "## Targets", "", "| Target | Non-missing | Share = 1 |", "|---|---|---|"]
     for h in horizons:
-        for label in ("bear", "stressed"):
+        for label in TARGET_LABELS:
             col = f"target_{label}_h{h}"
             lines.append(f"| `{col}` | {table[col].notna().sum():,} | {table[col].mean():.1%} |")
 
@@ -162,8 +182,8 @@ def write_summary(path: Path, daily, table, quality, checks, horizons, feature_c
 
     counts = {s: sum(st == s for _, st, _ in checks) for s in ("PASS", "WARN", "FAIL")}
     lines += ["", f"## Checks ({counts['PASS']} pass, {counts['WARN']} warn, {counts['FAIL']} fail)", "",
-              "WARN on the known-bear-market checks means the 20% rule split that bear market at a "
-              "20%+ rally. See the 'Bear markets found' table above.", "",
+              "WARN on a known-bear-market check means that label splits the bear market at a "
+              "20%+ rally. This is expected for `bear` (the main label) and is the reason `bear_merged` exists.", "",
               "| Check | Result | Detail |", "|---|---|---|"]
     for name, status, detail in checks:
         lines.append(f"| {name} | {status} | {detail} |")
@@ -203,7 +223,7 @@ def main() -> int:
 
     log(f"3-4/6 Building labels, targets (h = {args.horizons}) and features ...")
     table = build_model_table(daily, horizons=args.horizons)
-    label_cols = {"bear", "bear_recovery", "stressed", "stress_threshold"}
+    label_cols = set(ALL_LABELS) | {"stress_threshold"}
     feature_cols = [c for c in table.columns if c not in label_cols and not c.startswith("target_")]
     log(f"      model_table: {table.shape[0]:,} rows x {table.shape[1]} columns "
         f"({len(feature_cols)} features)")
@@ -226,7 +246,7 @@ def main() -> int:
         log(f"      wrote {p.relative_to(ROOT)} ({p.stat().st_size / 1e6:.1f} MB)")
 
     print("\nShare of days in each regime:")
-    print(table[["bear", "bear_recovery", "stressed"]].mean().map("{:.1%}".format).to_string())
+    print(table[list(ALL_LABELS)].mean().map("{:.1%}".format).to_string())
     return 1 if failed else 0
 
 
