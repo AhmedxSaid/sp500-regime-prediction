@@ -3,8 +3,8 @@
 Run `python process_data.py` first.
 
 Usage (from the repo root):
-    python run_models.py                       # main feature set (from 1962)
-    python run_models.py --features extended   # + SPY volume (from 1993)
+    python run_models.py                       # main feature set (from 1962), test 1980-2021
+    python run_models.py --features modern     # main + VIX (from 1990), test 2000-2021
 
 Outputs:
     data/processed/predictions_<features>.parquet   every out-of-sample prediction
@@ -33,8 +33,8 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from sp500.config import (  # noqa: E402
-    DATA_PROCESSED, FEATURES_EXTENDED, FEATURES_MAIN, FIRST_TEST_YEAR, HOLDOUT_START, HORIZONS,
-    MODEL_START, REPORTS, WALK_FORWARD_GAP,
+    DATA_PROCESSED, FEATURES_MAIN, FEATURES_MODERN, FIRST_TEST_YEAR, HOLDOUT_START, HORIZONS,
+    MODEL_START, MODERN_FIRST_TEST_YEAR, MODERN_START, REPORTS, WALK_FORWARD_GAP,
 )
 from sp500.features import bear_price_series  # noqa: E402
 from sp500.labels import episodes  # noqa: E402
@@ -97,14 +97,14 @@ def timeline_figure(preds: pd.DataFrame, table: pd.DataFrame, method: str, path:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--features", choices=["main", "extended"], default="main")
+    parser.add_argument("--features", choices=["main", "modern"], default="main")
     parser.add_argument("--reuse", action="store_true",
                         help="reuse saved predictions and only rebuild the metrics and report")
     args = parser.parse_args()
 
-    features = FEATURES_MAIN if args.features == "main" else FEATURES_EXTENDED
-    start = MODEL_START if args.features == "main" else "1993-01-01"
-    first_test = FIRST_TEST_YEAR if args.features == "main" else 2000
+    features = FEATURES_MAIN if args.features == "main" else FEATURES_MODERN
+    start = MODEL_START if args.features == "main" else MODERN_START
+    first_test = FIRST_TEST_YEAR if args.features == "main" else MODERN_FIRST_TEST_YEAR
     tag = args.features
 
     table = pd.read_parquet(DATA_PROCESSED / "model_table.parquet")

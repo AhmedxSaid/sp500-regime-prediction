@@ -1,6 +1,6 @@
 # Model results (main features)
 
-Generated 2026-10-25 15:47 by `run_models.py`. Walk-forward out-of-sample predictions for **1980–2021** (one test year at a time; models retrained each year on all earlier data from 1962, with a 21-day gap). The 2022+ holdout is not used.
+Generated 2026-10-25 15:55 by `run_models.py`. Walk-forward out-of-sample predictions for **1980–2021** (one test year at a time; models retrained each year on all earlier data from 1962, with a 21-day gap). The 2022+ holdout is not used.
 
 Features (13): `ret_1d`, `mom_1m`, `mom_3m`, `mom_12m`, `dist_ma50`, `dist_ma200`, `drawdown`, `below_peak_regime`, `rv_21d`, `rv_63d`, `parkinson_21d`, `rv_vs_5y_p80`, `gap_open`
 

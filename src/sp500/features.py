@@ -54,6 +54,13 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
         v = df["spy_volume"]
         f["spy_vol_ratio_20d"] = np.log(v / v.rolling(20).mean())
 
+    if "vix_close" in df.columns:
+        # VIX = market's 30-day implied volatility (annualized %), known at the close of day t
+        vix = df["vix_close"] / 100
+        f["vix"] = vix
+        f["vix_rv_spread"] = vix - f["rv_21d"]          # implied minus realized ("fear premium")
+        f["vix_chg_5d"] = np.log(vix / vix.shift(5))     # 1-week change in fear
+
     if "es_close" in df.columns:
         es_ret = np.log(df["es_close"]).diff()
         if "es_roll_window" in df.columns:

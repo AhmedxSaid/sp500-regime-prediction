@@ -13,6 +13,7 @@ TICKERS = {
     "sp500tr": "^SP500TR", # S&P 500 total return index
     "spy": "SPY",          # SPDR S&P 500 ETF
     "es": "ES=F",          # E-mini S&P 500 continuous futures
+    "vix": "^VIX",         # CBOE Volatility Index (30-day implied vol), from 1990
 }
 
 # short name -> Stooq symbol (fallback source; no total return index there)
@@ -63,8 +64,26 @@ FEATURES_MAIN = [
     "rv_21d", "rv_63d", "parkinson_21d", "rv_vs_5y_p80",  # volatility
     "gap_open",                                         # overnight gap
 ]
-# Extended set adds SPY volume (from 1993); tested later as a feature group
-FEATURES_EXTENDED = FEATURES_MAIN + ["spy_vol_ratio_20d"]
+# Candidate feature groups, each tested on top of FEATURES_MAIN (see run_feature_groups.py)
+FEATURE_GROUPS = {
+    "spy_volume": ["spy_vol_ratio_20d"],                    # from 1993
+    "vix": ["vix", "vix_rv_spread", "vix_chg_5d"],          # from 1990
+}
+# Kept only if it beats the base set out of sample (decision rule fixed before testing):
+# mean PR-AUC over the 4 main targets improves by >= 0.01 for BOTH logistic regression and
+# LightGBM, and mean onset PR-AUC drops by no more than 0.01 for either.
+GROUP_MIN_GAIN = 0.01
+GROUP_MAX_ONSET_LOSS = 0.01
+# Result of run_feature_groups.py (2026-10-25, test years 2000-2021):
+#   spy_volume: +0.005 / +0.002 PR-AUC (logreg / LightGBM) -> DROPPED (below the 0.01 bar)
+#   vix:        +0.020 / +0.018 PR-AUC, onset +0.043 / +0.018 -> KEPT
+# VIX only exists from 1990, so it forms a separate "modern" model rather than joining the 1962 one.
+# On the same test years (2000-2021) the 1962 model WITHOUT VIX beats the 1990 model WITH VIX
+# (e.g. stressed 21d PR-AUC 0.725 vs 0.674): the extra history is worth more than VIX.
+# -> FEATURES_MAIN (1962) stays the primary model; FEATURES_MODERN is kept for reference.
+FEATURES_MODERN = FEATURES_MAIN + FEATURE_GROUPS["vix"]
+MODERN_START = "1990-02-01"
+MODERN_FIRST_TEST_YEAR = 2000
 
 MODEL_START = "1962-01-01"      # first rows with all main features
 FIRST_TEST_YEAR = 1980          # walk-forward: train on 1962..N-1, test on year N

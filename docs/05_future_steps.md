@@ -11,7 +11,8 @@
 | 5.4 Evaluation: PR-AUC, onset PR-AUC, Brier, flips, lead time | ✅ Done |
 | 5.4 Per-crisis results | ⬜ To do |
 | 5.5 Interpretation (coefficients / SHAP) | ⬜ To do |
-| 5.5 Extended features (SPY volume), new groups (VIX) | ⬜ To do |
+| 5.5 Feature groups: SPY volume, VIX | ✅ Done: SPY volume dropped; VIX passes but loses to the longer 1962 history ([06_modeling.md](06_modeling.md)) |
+| 5.5 Other groups (VIX term structure, sector ETFs, breadth) | ⬜ Optional: VIX3M only exists from ~2007, too short to test reliably |
 | 5.6 Literature extensions | ⬜ Optional |
 | 5.7 Final holdout (2022+) and report | ⬜ To do, last |
 

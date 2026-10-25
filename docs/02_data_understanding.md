@@ -43,9 +43,13 @@ Every file has the columns `date, open, high, low, close, adj_close, volume`. No
 
 To refresh the data: `python -m sp500.data_download`
 
-### Candidate extra sources (to add later, one group at a time)
+### Extra sources
 
-- **Volatility:** VIX (`^VIX`), VIX3M (`^VIX3M`), VIX9D, VVIX → term structure (VIX/VIX3M).
+**Added:** `^VIX` (CBOE Volatility Index), 1990-01-02 → 2026-10-23, in `data/raw/vix.csv`. It was tested as a feature group; see [06_modeling.md](06_modeling.md).
+
+**Candidates (to add later, one group at a time):**
+
+- **Volatility term structure:** VIX3M (`^VIX3M`), VIX9D, VVIX → VIX/VIX3M. Only from ~2007, which is short.
 - **Sector ETFs:** XLK, XLF, XLE, XLV, XLY, XLP, XLI, XLU, XLB → dispersion and defensive vs. cyclical rotation.
 - **Breadth:** share of constituents above their 200-day MA, advance/decline line.
 - **Macro / rates:** 10Y–2Y spread, credit spreads (FRED).

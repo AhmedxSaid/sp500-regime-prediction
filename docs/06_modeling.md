@@ -81,12 +81,49 @@ Days of warning before a regime started (probability ≥ 50% on the days before 
 
 Stress usually starts suddenly (one bad day pushes volatility above the threshold), so true early warning is rare. The models' value is mostly in **recognizing stress within the first days** and in **ranking risk** (higher probability before stress than before calm), not in long advance warning.
 
+## Feature group tests (SPY volume, VIX)
+
+Code: [`run_feature_groups.py`](../run_feature_groups.py). Full tables: [`reports/feature_groups.md`](../reports/feature_groups.md).
+
+**Method.** Each group is added on top of the 13 main features and compared with the main features alone, on **exactly the same rows**: training from 1993 (when both groups exist), test years 2000–2021, logistic regression and LightGBM. The decision rule was fixed in `config.py` before running: keep a group only if mean PR-AUC over the 4 main targets improves by **≥ 0.01 for both models**, and onset PR-AUC drops by no more than 0.01.
+
+**New data:** `^VIX` (CBOE Volatility Index: the market's expected volatility over the next 30 days, from option prices), 1990-01-02 → 2026-10-23, in `data/raw/vix.csv`. Features: `vix` (level), `vix_rv_spread` (VIX minus realized vol: the "fear premium"), `vix_chg_5d` (1-week change).
+
+| Group | Δ PR-AUC (logistic / LightGBM) | Δ onset PR-AUC | Decision |
+|---|---|---|---|
+| SPY volume (`spy_vol_ratio_20d`) | +0.005 / +0.002 | +0.011 / +0.010 | ❌ **Drop** (below the 0.01 bar) |
+| VIX (3 features) | **+0.020 / +0.018** | **+0.043 / +0.018** | ✅ **Passes the rule** |
+
+**VIX: useful, but not worth its shorter history.**
+- **Where it helps:** logistic regression gains mostly on stress in 21 days (0.569 → 0.626); LightGBM gains mostly on bear (0.233 → 0.266).
+- **The gain is not robust.**
+  - On the robustness labels it nearly disappears (mean +0.001 / +0.002).
+  - Year by year, LightGBM improves in only 9 of 16 test years with both classes. Logistic regression improves in 14 of 16.
+- **Using VIX means training from 1990, and that costs more than VIX adds.** On the same test years 2000–2021:
+
+| Target (2000–2021) | Main model: 1962+, no VIX | "Modern" model: 1990+, with VIX |
+|---|---|---|
+| Stressed in 21 days (logistic regression) | **0.725** | 0.674 |
+| Stressed in 21 days (LightGBM) | **0.721** | 0.688 |
+| Bear in 5 days (logistic regression) | **0.375** | 0.153 |
+| Bear in 21 days (LightGBM) | **0.247** | 0.207 |
+
+  With training from 1990, the early folds contain only one short bear market (1990), so the bear models barely learn. Even for stress, 28 extra years of history beat VIX.
+
+**Decision:** the **main 1962 model (13 features, no VIX) stays the primary model**. The VIX model is kept for reference ([`reports/model_results_modern.md`](../reports/model_results_modern.md), `python run_models.py --features modern`).
+
+**Possible follow-up:** LightGBM can train with missing values, so it could use the full 1962+ history with VIX left empty before 1990. That would get both benefits. It hasn't been tested.
+
+**Side finding (2000–2021 only):** for **bear**, the simple baselines are as good as or better than the models. At 21 days, the 2-state HMM scores 0.352 and the 200-day-MA rule 0.317, vs. 0.268 for logistic regression. The models' bear advantage in the full 1980–2021 test comes mostly from the 1980s–90s.
+
 ## Conclusions
 
 1. **Stress is predictable; bear-market starts are not.** For the report: the useful product is a calibrated "stress in the next 1–4 weeks" probability.
 2. **Logistic regression is the recommended main model:** best or tied-best on most metrics, simple, and interpretable. LightGBM is a close second, and the SVM is third.
+3. **Long history beats extra data sources.** SPY volume doesn't help. VIX helps a little, but not enough to justify losing 1962–1989. The primary model keeps the 13 main features.
+4. **For bear markets, simple rules are hard to beat** in recent decades (2000–2021).
 3. **The SVM result is relevant to the literature:** in this regime task, an RBF SVM doesn't beat simpler models, unlike the price-level forecasts in Sheta et al. Note that we use a much longer test period (42 years vs. 43 weekly points).
 
 ## Next steps
 
-See [05_future_steps.md](05_future_steps.md). In short: interpret logistic regression and LightGBM (coefficients / SHAP), test the extended feature set (`python run_models.py --features extended`) and new feature groups (VIX), check the per-crisis results, then run the 2022+ holdout **once**.
+See [05_future_steps.md](05_future_steps.md). In short: interpret logistic regression and LightGBM (coefficients / SHAP), check the per-crisis results, then run the 2022+ holdout **once**.
