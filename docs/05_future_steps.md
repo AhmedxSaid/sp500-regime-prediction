@@ -1,5 +1,20 @@
 # 5. Future Steps
 
+## Status (2026-10-25)
+
+| Step | Status |
+|---|---|
+| 5.1 Validation design | ✅ Done: `validation.py` + per-fold bear labels in `models.py` |
+| 5.2 Baselines | ✅ Done: no change, 200-day MA rule, 2-state HMM |
+| 5.3 Models: logistic regression, LightGBM, SVM | ✅ Done. Results in [06_modeling.md](06_modeling.md) |
+| 5.3 LSTM | ⏸ Not needed: simple models already match LightGBM |
+| 5.4 Evaluation: PR-AUC, onset PR-AUC, Brier, flips, lead time | ✅ Done |
+| 5.4 Per-crisis results | ⬜ To do |
+| 5.5 Interpretation (coefficients / SHAP) | ⬜ To do |
+| 5.5 Extended features (SPY volume), new groups (VIX) | ⬜ To do |
+| 5.6 Literature extensions | ⬜ Optional |
+| 5.7 Final holdout (2022+) and report | ⬜ To do, last |
+
 ## 5.1 Validation design
 
 - **Walk-forward:** train up to year *N*, test on year *N + 1*, then roll forward (`sp500.validation.walk_forward_splits`).

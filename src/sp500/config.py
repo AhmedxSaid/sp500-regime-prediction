@@ -49,3 +49,24 @@ HORIZONS = (5, 21)
 
 # Final holdout: never used for tuning
 HOLDOUT_START = "2022-01-01"
+
+# ---------------------------------------------------------------------------
+# Modeling setup. Fixed on 2026-10-25 BEFORE any model results; do not tune.
+# ---------------------------------------------------------------------------
+# Main feature set: everything available from 1962 (real OHL starts then), without the
+# near-duplicates found in EDA (Garman-Klass ~ Parkinson 0.97, mom_6m ~ dist_ma200 0.94,
+# es_ret_1d ~ ret_1d 0.97).
+FEATURES_MAIN = [
+    "ret_1d", "mom_1m", "mom_3m", "mom_12m",          # returns / momentum
+    "dist_ma50", "dist_ma200",                          # trend
+    "drawdown", "below_peak_regime",                    # drawdown
+    "rv_21d", "rv_63d", "parkinson_21d", "rv_vs_5y_p80",  # volatility
+    "gap_open",                                         # overnight gap
+]
+# Extended set adds SPY volume (from 1993); tested later as a feature group
+FEATURES_EXTENDED = FEATURES_MAIN + ["spy_vol_ratio_20d"]
+
+MODEL_START = "1962-01-01"      # first rows with all main features
+FIRST_TEST_YEAR = 1980          # walk-forward: train on 1962..N-1, test on year N
+WALK_FORWARD_GAP = 21           # trading days between train end and test start (>= max horizon)
+SVM_TRAIN_EVERY = 5             # SVM trains on every 5th day (weekly), as in Sheta et al.

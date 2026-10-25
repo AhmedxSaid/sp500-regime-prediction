@@ -22,7 +22,7 @@ Given market data available at the close of day *t*, estimate the probability th
 3. Which features drive the predictions (momentum, distance from moving averages, volatility, volume, futures)?
 4. Do results stay stable across decades, label definitions and horizons?
 5. *(Extension)* Do extra data sources (VIX term structure, sector ETFs, news sentiment) improve out-of-sample results?
-6. *(Extension)* How does an SVM compare with logistic regression and gradient boosting on this task (see [literature.md](literature.md))?
+6. How does an SVM compare with logistic regression and gradient boosting on this task (see [literature.md](literature.md))? **Decision:** the SVM is one of the three compared models, not a separate track.
 
 ## Success criteria
 

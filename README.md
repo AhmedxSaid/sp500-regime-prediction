@@ -17,7 +17,10 @@ The project follows a CRISP-DM–style workflow:
 | 2. Data understanding | [docs/02_data_understanding.md](docs/02_data_understanding.md) | `notebooks/00_data_understanding.ipynb`, `src/sp500/data_download.py` |
 | 3. Data preparation | [docs/03_data_preparation.md](docs/03_data_preparation.md) | `src/sp500/data_prep.py`, `labels.py`, `features.py` |
 | 4. Exploratory data analysis | [docs/04_eda.md](docs/04_eda.md) | `notebooks/01_eda.ipynb` |
-| 5. Future steps (modeling & evaluation) | [docs/05_future_steps.md](docs/05_future_steps.md) | `src/sp500/validation.py` |
+| 5. Future steps (plan & status) | [docs/05_future_steps.md](docs/05_future_steps.md) | – |
+| 6. Modeling & evaluation | [docs/06_modeling.md](docs/06_modeling.md) | `run_models.py`, `src/sp500/models.py`, `validation.py` |
+
+**Headline result (walk-forward 1980–2021):** stress in the next 21 days is predictable. Logistic regression reaches PR-AUC 0.66 vs. 0.51 for "no change" and identifies upcoming stress on calm days about twice as well. Bear-market *starts* are not predictable; models only recognize bear markets once they are underway.
 | Related work | [docs/literature.md](docs/literature.md) | – |
 
 ## Repository layout
@@ -43,6 +46,7 @@ sp500-regime-prediction/
 │   ├── features.py       # step 3: features + labels -> model table
 │   └── validation.py     # walk-forward splits with a gap
 ├── process_data.py    # run the whole processing pipeline + checks in one command
+├── run_models.py      # baselines + models, walk-forward evaluation, results report
 ├── pyproject.toml
 └── requirements.txt
 ```
@@ -74,6 +78,14 @@ This cleans and aligns the raw CSVs, builds labels, targets and features, runs 2
 | [`reports/processing_summary.md`](reports/processing_summary.md) | Row counts, regime stats, every bear market found, feature start dates, check results |
 
 Options: `--horizons 5 10 21` (prediction horizons), `--format csv|parquet|both`.
+
+Then train and evaluate the baselines and models (walk-forward, about 2 minutes):
+
+```bash
+python run_models.py
+```
+
+This writes [`reports/model_results_main.md`](reports/model_results_main.md) and the timeline chart. The extra libraries it needs are `lightgbm` and `hmmlearn` (in `requirements.txt`).
 
 To refresh the raw data with the latest prices (this overwrites `data/raw/*.csv`):
 

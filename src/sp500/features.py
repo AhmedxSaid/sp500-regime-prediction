@@ -63,17 +63,23 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     return f
 
 
-def build_labels(df: pd.DataFrame) -> pd.DataFrame:
-    # Bull/bear on the total return index where available (from 1988), price index before
+def bear_price_series(df: pd.DataFrame) -> pd.Series:
+    """Price used for bull/bear labels: total return index from 1988, price index before.
+
+    The price index is scaled to the TR level at the TR start so returns stay continuous.
+    """
     tr = df.get("sp500tr_close")
     bear_price = df["gspc_close"]
     if tr is not None and tr.notna().sum() > TRADING_DAYS:
-        # splice: scale the price index to the TR level at the TR start so returns stay continuous
         first = tr.first_valid_index()
         scale = tr.loc[first] / df["gspc_close"].loc[first]
         bear_price = pd.concat([df["gspc_close"].loc[:first].iloc[:-1] * scale, tr.loc[first:]])
         bear_price = bear_price.reindex(df.index).ffill()
+    return bear_price.rename("bear_price")
 
+
+def build_labels(df: pd.DataFrame) -> pd.DataFrame:
+    bear_price = bear_price_series(df)
     labels = pd.DataFrame(index=df.index)
     labels["bear"] = bear_market_labels(bear_price, method="peak_to_trough")        # main label
     labels["bear_merged"] = merge_bear_episodes(labels["bear"], bear_price)         # robustness label
@@ -91,6 +97,8 @@ def build_model_table(df: pd.DataFrame, horizons=HORIZONS) -> pd.DataFrame:
     # Causal "still in a 20% drawdown and not yet back to the old high" flag, known at day t.
     # Lets models learn that a rally deep below the peak is suspicious, without changing the label.
     feats["below_peak_regime"] = labels["bear_recovery"].astype(float)
+    # Realized vol relative to the stress threshold (> 1 means "stressed now"); causal
+    feats["rv_vs_5y_p80"] = feats["rv_21d"] / labels["stress_threshold"]
     targets = [make_target(labels[name], h) for h in horizons for name in TARGET_LABELS]
     return pd.concat([feats, labels, *targets], axis=1)
 

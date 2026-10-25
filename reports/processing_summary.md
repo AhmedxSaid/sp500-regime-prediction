@@ -1,13 +1,13 @@
 # Processing summary
 
-Generated 2026-10-25 15:35 by `process_data.py`.
+Generated 2026-10-25 15:43 by `process_data.py`.
 
 ## Outputs
 
 | Table | Rows | Columns | From | To |
 |---|---|---|---|---|
 | `sp500_daily` | 24,821 | 26 | 1927-12-30 | 2026-10-23 |
-| `model_table` | 24,821 | 30 | 1927-12-30 | 2026-10-23 |
+| `model_table` | 24,821 | 31 | 1927-12-30 | 2026-10-23 |
 
 Final holdout (do not use for tuning): 2022-01-01 onward, 1,207 rows.
 
@@ -119,6 +119,7 @@ Final holdout (do not use for tuning): 2022-01-01 onward, 1,207 rows.
 | `spy_vol_ratio_20d` | 1993-02-26 | 8,473 |
 | `es_ret_1d` | 2000-09-19 | 6,041 |
 | `below_peak_regime` | 1927-12-30 | 24,821 |
+| `rv_vs_5y_p80` | 1933-02-10 | 23,540 |
 
 ## Checks (46 pass, 6 warn, 0 fail)
 
