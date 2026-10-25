@@ -1,5 +1,7 @@
 # 3. Data Preparation
 
+Run all of it with `python process_data.py` (from the repo root). That script calls the modules below, runs the checks, and writes `reports/processing_summary.md`.
+
 Pipeline:
 
 ```
@@ -39,6 +41,17 @@ By default the labels use `^SP500TR` (includes dividends), with `^GSPC` as a fal
 ### Sanity check
 
 Plot the labels against price and check that they catch the known bear markets: 2000–02, 2007–09, 2020 and 2022. This is done in the EDA notebook.
+
+**Results from the first run (data through 2026-10-23):**
+
+| Label | Share of days | Episodes | Median length |
+|---|---|---|---|
+| `bear` (peak to trough) | 20.9% | 27 | 168 days |
+| `bear_recovery` | 50.6% | 12 | 390 days |
+| `stressed` | 11.4% | 140 | 10 days |
+
+- `bear` fully captures 1973–74, 2020 and 2022, and 92% of 2007–09. It **splits** 1929–32 (73% covered) and 2000–02 (55%), because each had a bear-market rally of more than 20% (e.g. Sept 2001 → Jan 2002), and the 20% rule ends a bear there. **Team decision:** keep this, or merge bears separated by short rallies?
+- `bear_recovery` labels half of all days as bear: after 1929 the index took until 1954 to regain its peak (a 6,219-day episode). It probably works better as a feature ("are we still below the old high?") than as a target.
 
 ## Step 3 — Prediction target
 
