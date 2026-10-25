@@ -1,11 +1,8 @@
-# Data (downloaded / generated; not committed)
-data/raw/*
+# Raw data snapshot IS committed (data/raw/*.csv); generated data is not
 data/processed/*
-!data/raw/.gitkeep
 !data/processed/.gitkeep
 *.parquet
-*.csv
-!docs/**/*.csv
+reports/*.csv
 
 # Generated reports
 reports/figures/*

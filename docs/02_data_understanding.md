@@ -22,7 +22,16 @@
 
 Tools: [yfinance](https://pypi.org/project/yfinance/) ([GitHub](https://github.com/ranaroussi/yfinance)) · [pandas-datareader](https://pandas-datareader.readthedocs.io/) (Stooq reader).
 
-Download everything with:
+**The data is included in the repo:** [`data/raw/`](../data/raw/README.md) holds the complete daily history of all four series as CSV (Yahoo Finance, downloaded 2026-10-25, through 2026-10-23):
+
+| File | Range | Rows |
+|---|---|---|
+| `gspc.csv` | 1927-12-30 → 2026-10-23 | 24,821 |
+| `sp500tr.csv` | 1988-01-04 → 2026-10-23 | 9,776 |
+| `spy.csv` | 1993-01-29 → 2026-10-23 | 8,492 |
+| `es.csv` | 2000-09-18 → 2026-10-23 | 6,590 |
+
+To refresh it with the latest prices:
 
 ```bash
 python -m sp500.data_download
@@ -46,7 +55,9 @@ python -m sp500.data_download
 | Quarterly contract roll jumps | `ES=F` | Roll windows flagged (~8 days before the 3rd Friday of Mar/Jun/Sep/Dec); ES returns set to NaN on those days |
 | Different trading calendars (futures trade on more days) | `ES=F` vs. index | Everything aligned to the `^GSPC` trading calendar |
 | Small gaps / holidays | all | Forward-fill prices for at most 2 days; volume is never filled |
-| Yahoo history can change or break | all | Raw downloads cached to `data/raw/` with a timestamp in `metadata.json` |
+| Yahoo history can change or break | all | A dated snapshot is committed in `data/raw/`; refreshes go in separate commits |
+| `^SP500TR` volume is always 0 | `^SP500TR` | Ignored (use SPY volume) |
+| Prices stored as 32-bit floats (e.g. `20.430000305175781`) | all | Rounded to 4 decimals |
 | FRED SP500 covers only 10 years (licensing) | FRED | Use Yahoo or Stooq for full history |
 | Yahoo "Download" button may require sign-in | Yahoo | Use yfinance (no sign-in) or Stooq CSVs |
 

@@ -1,4 +1,7 @@
-"""Download raw daily data for the core S&P 500 series and cache it as parquet.
+"""Download raw daily data for the core S&P 500 series and save it as CSV in data/raw/.
+
+The repo already ships a snapshot of these files. Run this only to refresh them;
+it overwrites data/raw/*.csv.
 
 Usage:
     python -m sp500.data_download            # Yahoo via yfinance, Stooq as fallback
@@ -73,8 +76,10 @@ def main() -> None:
                 print(f"[error] {name}: {exc}")
                 continue
 
-        path = DATA_RAW / f"{name}.parquet"
-        df.to_parquet(path)
+        path = DATA_RAW / f"{name}.csv"
+        price_cols = [c for c in ("open", "high", "low", "close", "adj_close") if c in df.columns]
+        df[price_cols] = df[price_cols].round(4)  # Yahoo stores float32; drop the noise digits
+        df.to_csv(path, date_format="%Y-%m-%d")
         meta["series"][name] = {
             "source": source,
             "symbol": yahoo_symbol if source == "yahoo" else STOOQ_SYMBOLS[name],

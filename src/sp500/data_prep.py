@@ -17,8 +17,14 @@ PRICE_COLS = ["open", "high", "low", "close", "adj_close"]
 KEEP_COLS = PRICE_COLS + ["volume"]
 
 
+def raw_path(name: str):
+    return DATA_RAW / f"{name}.csv"
+
+
 def load_raw(name: str) -> pd.DataFrame:
-    return pd.read_parquet(DATA_RAW / f"{name}.parquet")
+    df = pd.read_csv(raw_path(name), parse_dates=["date"], index_col="date")
+    df.columns = [c.lower() for c in df.columns]
+    return df
 
 
 def clean_ohlcv(df: pd.DataFrame, name: str) -> tuple[pd.DataFrame, dict]:
@@ -88,7 +94,7 @@ def build_dataset() -> tuple[pd.DataFrame, pd.DataFrame]:
     frames: dict[str, pd.DataFrame] = {}
     reports = []
     for name in TICKERS:
-        path = DATA_RAW / f"{name}.parquet"
+        path = raw_path(name)
         if not path.exists():
             print(f"[skip] {path.name} not found (run python -m sp500.data_download)")
             continue
@@ -97,7 +103,7 @@ def build_dataset() -> tuple[pd.DataFrame, pd.DataFrame]:
         reports.append(rep)
 
     if "gspc" not in frames:
-        raise FileNotFoundError("gspc.parquet is required as the master calendar")
+        raise FileNotFoundError("data/raw/gspc.csv is required as the master calendar")
 
     calendar = frames["gspc"].index
     aligned = []

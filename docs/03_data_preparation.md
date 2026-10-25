@@ -3,7 +3,7 @@
 Pipeline:
 
 ```
-data_download.py  ->  data/raw/{gspc,sp500tr,spy,es}.parquet
+data/raw/{gspc,sp500tr,spy,es}.csv   (committed snapshot; refresh with data_download.py)
 data_prep.py      ->  data/processed/sp500_daily.parquet   (+ reports/data_quality.csv)
 features.py       ->  data/processed/model_table.parquet   (features + labels + targets)
 ```

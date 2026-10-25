@@ -23,8 +23,8 @@ The project follows a CRISP-DM–style workflow:
 ```
 sp500-regime-prediction/
 ├── data/
-│   ├── raw/           # downloaded parquet files (not committed)
-│   └── processed/     # cleaned, aligned data + model table (not committed)
+│   ├── raw/           # full-history CSV snapshot of the 4 series (committed)
+│   └── processed/     # cleaned, aligned data + model table (generated, not committed)
 ├── docs/              # one document per project phase
 ├── notebooks/
 │   └── 01_eda.ipynb   # exploratory data analysis
@@ -32,7 +32,7 @@ sp500-regime-prediction/
 │   └── figures/       # saved plots
 ├── src/sp500/
 │   ├── config.py         # paths, tickers, constants
-│   ├── data_download.py  # step 1: download raw data (yfinance, Stooq fallback)
+│   ├── data_download.py  # refresh the raw CSVs (yfinance, Stooq fallback)
 │   ├── data_prep.py      # step 2: clean, quality-check, align calendars
 │   ├── labels.py         # bull/bear and calm/stressed labels, forward targets
 │   ├── features.py       # step 3: features + labels -> model table
@@ -52,26 +52,35 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-Run the pipeline:
+The raw data is already in `data/raw/`, so you can go straight to the pipeline:
 
 ```bash
-python -m sp500.data_download   # -> data/raw/*.parquet
 python -m sp500.data_prep       # -> data/processed/sp500_daily.parquet + reports/data_quality.csv
 python -m sp500.features        # -> data/processed/model_table.parquet
+```
+
+To refresh the raw data with the latest prices (this overwrites `data/raw/*.csv`):
+
+```bash
+python -m sp500.data_download
 ```
 
 Then open `notebooks/01_eda.ipynb`.
 
 ## Data
 
-| Series | Ticker | From | Role |
-|---|---|---|---|
-| S&P 500 price index | `^GSPC` | 1927 (OHL from ~1962) | Main series: labels and features |
-| S&P 500 total return | `^SP500TR` | 1988 | Bull/bear labels including dividends |
-| SPY ETF | `SPY` | 1993 | Real traded volume |
-| E-mini S&P 500 futures | `ES=F` | ~2000 | Futures moves (watch quarterly roll jumps) |
+A full-history snapshot (downloaded from Yahoo Finance on 2026-10-25, through 2026-10-23) is included in [`data/raw/`](data/raw/README.md):
 
-Raw data is not committed. Yahoo data can change or disappear, so every run caches to `data/raw/`. Details are in [docs/02_data_understanding.md](docs/02_data_understanding.md).
+| File | Series | Ticker | Range | Rows | Role |
+|---|---|---|---|---|---|
+| `gspc.csv` | S&P 500 price index | `^GSPC` | 1927-12-30 → 2026-10-23 (OHL from 1962) | 24,821 | Main series: labels and features |
+| `sp500tr.csv` | S&P 500 total return | `^SP500TR` | 1988-01-04 → 2026-10-23 | 9,776 | Bull/bear labels including dividends |
+| `spy.csv` | SPY ETF | `SPY` | 1993-01-29 → 2026-10-23 | 8,492 | Real traded volume |
+| `es.csv` | E-mini S&P 500 futures | `ES=F` | 2000-09-18 → 2026-10-23 | 6,590 | Futures moves (watch quarterly roll jumps) |
+
+Committing the snapshot means everyone works on exactly the same data, even if Yahoo later revises or removes history. Details and known issues: [data/raw/README.md](data/raw/README.md) and [docs/02_data_understanding.md](docs/02_data_understanding.md).
+
+The data comes from Yahoo Finance; S&P 500 index values belong to S&P Dow Jones Indices. It is included for non-commercial academic research only.
 
 ## Key rules (avoiding look-ahead bias)
 
