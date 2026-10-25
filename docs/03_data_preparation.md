@@ -16,8 +16,11 @@ features.py       ->  data/processed/model_table.parquet   (features + labels + 
 - Set non-positive prices to NaN; set rows where open = high = low = close to NaN for O/H/L (pre-1962 index data).
 - Set zero volume to NaN.
 - Align all series on the `^GSPC` trading calendar. Columns are prefixed (`gspc_close`, `spy_volume`, `es_close`, ...).
-- Forward-fill **prices** for at most 2 days. Volume is not filled.
+- Forward-fill **prices** for at most 2 days, only on days a series has no row for. Volume is not filled.
+- Replace 4 suspected bad prints in `^GSPC` (1935–1961) with the midpoint of their neighbours; flagged in `gspc_bad_print_fixed`.
 - Flag ES futures roll windows (`es_roll_window = 1`).
+
+Why each rule exists, with evidence from the data: [02_data_understanding.md](02_data_understanding.md).
 
 ## Step 2 — Regime labels (`labels.py`)
 
@@ -54,7 +57,7 @@ Plot the labels against price and check that they catch the known bear markets: 
 | `bear` (main) | 20.9% | 27 | 168 days | 437 days |
 | `bear_merged` (robustness) | 23.6% | 17 | 268 days | 1,366 days |
 | `bear_recovery` (feature) | 50.6% | 12 | 390 days | 6,219 days |
-| `stressed` | 11.4% | 140 | 10 days | 241 days |
+| `stressed` | 11.7% | 142 | 10 days | 241 days |
 
 - `bear` fully captures 1973–74, 2020 and 2022, and 92% of 2007–09. It **splits** 1929–32 (73% covered) and 2000–02 (55%), because each had a bear-market rally of more than 20%.
 - `bear_merged` joins these: 1929–35 becomes one episode, as do 2000–02 and 2007–09. 1929–32 is then 100% covered, and 2000–02 is 74%. The remaining dot-com gap has two causes:

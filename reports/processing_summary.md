@@ -1,24 +1,24 @@
 # Processing summary
 
-Generated 2026-10-25 15:13 by `process_data.py`.
+Generated 2026-10-25 15:23 by `process_data.py`.
 
 ## Outputs
 
 | Table | Rows | Columns | From | To |
 |---|---|---|---|---|
-| `sp500_daily` | 24,821 | 25 | 1927-12-30 | 2026-10-23 |
+| `sp500_daily` | 24,821 | 26 | 1927-12-30 | 2026-10-23 |
 | `model_table` | 24,821 | 27 | 1927-12-30 | 2026-10-23 |
 
 Final holdout (do not use for tuning): 2022-01-01 onward, 1,207 rows.
 
 ## Raw data quality
 
-| series | rows | start | end | non_positive_prices | flat_ohlc_rows | inconsistent_hlc_rows | zero_volume_rows | missing_close | moves_gt_15pct | largest_up_move | largest_down_move | largest_down_date |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| gspc | 24821 | 1927-12-30 | 2026-10-23 | 0 | 8547 | 0 | 5497 | 0 | 2 | 0.1537 | -0.229 | 1987-10-19 |
-| sp500tr | 9776 | 1988-01-04 | 2026-10-23 | 0 | 5379 | 0 | 9776 | 0 | 0 | 0.1096 | -0.1276 | 2020-03-16 |
-| spy | 8492 | 1993-01-29 | 2026-10-23 | 0 | 0 | 0 | 0 | 0 | 0 | 0.1356 | -0.1159 | 2020-03-16 |
-| es | 6590 | 2000-09-18 | 2026-10-23 | 0 | 0 | 10 | 11 | 0 | 0 | 0.132 | -0.1096 | 2020-03-16 |
+| series | rows | start | end | non_positive_prices | flat_ohlc_rows | inconsistent_hlc_rows | zero_volume_rows | missing_close | moves_gt_15pct | largest_up_move | largest_down_move | largest_down_date | bad_prints_fixed |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| gspc | 24821 | 1927-12-30 | 2026-10-23 | 0 | 8547 | 0 | 5497 | 0 | 2 | 0.1537 | -0.229 | 1987-10-19 | 4 |
+| sp500tr | 9776 | 1988-01-04 | 2026-10-23 | 0 | 5379 | 0 | 9776 | 0 | 0 | 0.1096 | -0.1276 | 2020-03-16 | 0 |
+| spy | 8492 | 1993-01-29 | 2026-10-23 | 0 | 0 | 0 | 0 | 0 | 0 | 0.1356 | -0.1159 | 2020-03-16 | 0 |
+| es | 6590 | 2000-09-18 | 2026-10-23 | 0 | 0 | 10 | 11 | 0 | 0 | 0.132 | -0.1096 | 2020-03-16 | 0 |
 
 ## Regimes
 
@@ -27,7 +27,7 @@ Final holdout (do not use for tuning): 2022-01-01 onward, 1,207 rows.
 | `bear` | 20.9% | 27 | 168 | 437 |
 | `bear_merged` | 23.6% | 17 | 268 | 1366 |
 | `bear_recovery` | 50.6% | 12 | 390 | 6219 |
-| `stressed` | 11.4% | 140 | 10 | 241 |
+| `stressed` | 11.7% | 142 | 10 | 241 |
 
 - `bear`: **main label**. Standard 20% rule, peak to trough.
 - `bear_merged`: **robustness label**. `bear`, with bear markets merged when the rally between them lasts at most 126 trading days and stays below the starting peak.
@@ -74,10 +74,10 @@ Final holdout (do not use for tuning): 2022-01-01 onward, 1,207 rows.
 |---|---|---|
 | `target_bear_h5` | 24,816 | 20.9% |
 | `target_bear_merged_h5` | 24,816 | 23.6% |
-| `target_stressed_h5` | 23,540 | 11.4% |
+| `target_stressed_h5` | 23,540 | 11.7% |
 | `target_bear_h21` | 24,800 | 20.9% |
 | `target_bear_merged_h21` | 24,800 | 23.6% |
-| `target_stressed_h21` | 23,540 | 11.4% |
+| `target_stressed_h21` | 23,540 | 11.7% |
 
 ## Feature availability
 
@@ -93,9 +93,9 @@ Final holdout (do not use for tuning): 2022-01-01 onward, 1,207 rows.
 | `drawdown` | 1927-12-30 | 24,821 |
 | `rv_21d` | 1928-01-31 | 24,800 |
 | `rv_63d` | 1928-04-02 | 24,758 |
-| `parkinson_21d` | 1962-01-30 | 16,230 |
-| `garman_klass_21d` | 1962-01-30 | 16,230 |
-| `gap_open` | 1962-01-02 | 16,290 |
+| `parkinson_21d` | 1962-01-30 | 16,008 |
+| `garman_klass_21d` | 1962-01-30 | 16,008 |
+| `gap_open` | 1962-01-02 | 16,274 |
 | `spy_vol_ratio_20d` | 1993-02-26 | 8,473 |
 | `es_ret_1d` | 2000-09-19 | 6,041 |
 | `below_peak_regime` | 1927-12-30 | 24,821 |

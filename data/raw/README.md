@@ -23,7 +23,10 @@ Complete daily history of the four core series, downloaded from Yahoo Finance on
 - **`^GSPC` before 1962-01-02:** open = high = low = close (only the close is real), and volume is 0.
 - **`^SP500TR`:** volume is always 0.
 - **`ES=F`:** a continuous contract that jumps at the quarterly roll (around 8 days before the 3rd Friday of Mar/Jun/Sep/Dec). 11 rows have zero volume.
+- **`^GSPC` suspected bad prints:** 1935-04-16, 1935-08-16, 1936-09-16 and 1961-04-17 are one-day spikes that reverse the next day. They're left as-is in this raw file; cleaning replaces and flags them.
 - No duplicate dates in any file.
+
+The full quality analysis is in [`notebooks/00_data_understanding.ipynb`](../../notebooks/00_data_understanding.ipynb).
 
 Spot checks against known history: `^GSPC` closed at 224.84 on 1987-10-19 (Black Monday) and at 2,237.40 on 2020-03-23 (the COVID low).
 

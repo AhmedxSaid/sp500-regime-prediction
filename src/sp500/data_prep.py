@@ -68,6 +68,41 @@ def clean_ohlcv(df: pd.DataFrame, name: str) -> tuple[pd.DataFrame, dict]:
     return df[[c for c in KEEP_COLS if c in df.columns]], report
 
 
+def find_bad_prints(
+    close: pd.Series,
+    others: tuple[pd.Series, ...] = (),
+    min_move: float = 0.03,
+    z_today: float = 5.0,
+    z_next: float = 4.5,
+    window: int = 63,
+) -> pd.Series:
+    """Flag suspected bad prints: one-day spikes that fully reverse the next day.
+
+    A day is flagged when
+      - the move is > `min_move` and is reversed the next day (net change < 25% of the move),
+      - both moves are huge compared with the previous `window` days' volatility
+        (>= `z_today` and >= `z_next` standard deviations), so it is not a normal day in a
+        volatile market (real crash days like 1929-10-29 happen when volatility is already high),
+      - and no other source in `others` confirms it (same direction, at least half the size).
+    """
+    r = np.log(close).diff()
+    nxt = r.shift(-1)
+    vol = r.rolling(window).std().shift(1)  # past volatility only, excluding today
+    spike = (
+        (r.abs() > min_move)
+        & (nxt.abs() > min_move)
+        & (np.sign(r) != np.sign(nxt))
+        & ((r + nxt).abs() < 0.25 * r.abs())
+        & (r.abs() / vol >= z_today)
+        & (nxt.abs() / vol >= z_next)
+    )
+    for other in others:
+        ro = np.log(other.reindex(close.index)).diff()
+        confirmed = (np.sign(ro) == np.sign(r)) & (ro.abs() > 0.5 * r.abs())
+        spike &= ~confirmed
+    return spike.fillna(False).astype(bool)
+
+
 def es_roll_window(index: pd.DatetimeIndex, days_before_expiry: int = 8, half_width: int = 2) -> pd.Series:
     """Flag trading days around the quarterly E-mini roll.
 
@@ -110,14 +145,33 @@ def build_dataset() -> tuple[pd.DataFrame, pd.DataFrame]:
     for name, df in frames.items():
         a = df.reindex(calendar)
         price_cols = [c for c in PRICE_COLS if c in a.columns]
-        # only fill short gaps, and only inside the series' own history
+        # Fill only short calendar gaps: days the series has no row for, inside its own history.
+        # Values blanked on purpose during cleaning (e.g. fake pre-1962 OHL) must stay NaN.
         first, last = df.index.min(), df.index.max()
-        inside = (a.index >= first) & (a.index <= last)
-        a.loc[inside, price_cols] = a.loc[inside, price_cols].ffill(limit=FFILL_LIMIT)
+        absent = ~a.index.isin(df.index) & (a.index >= first) & (a.index <= last)
+        filled = a[price_cols].ffill(limit=FFILL_LIMIT)
+        a.loc[absent, price_cols] = filled.loc[absent]
         a.columns = [f"{name}_{c}" for c in a.columns]
         aligned.append(a)
 
     data = pd.concat(aligned, axis=1)
+
+    # Suspected bad prints in the main series: replace the close with the geometric midpoint of
+    # its neighbours and flag the row. Other sources (from 1988) are used to confirm real moves.
+    others = tuple(data[c] for c in ("sp500tr_close", "spy_close", "es_close") if c in data.columns)
+    bad = find_bad_prints(data["gspc_close"], others)
+    if bad.any():
+        prev_c, next_c = data["gspc_close"].shift(1), data["gspc_close"].shift(-1)
+        fixed = np.sqrt(prev_c * next_c).round(4)
+        for col in ("gspc_close", "gspc_adj_close"):
+            if col in data.columns:
+                data.loc[bad, col] = fixed[bad]
+        print(f"[fix] {int(bad.sum())} suspected bad prints in gspc_close replaced: "
+              + ", ".join(str(d.date()) for d in data.index[bad]))
+    data["gspc_bad_print_fixed"] = bad.astype("int8")
+    for rep in reports:
+        rep["bad_prints_fixed"] = int(bad.sum()) if rep["series"] == "gspc" else 0
+
     if "es" in frames:
         data["es_roll_window"] = es_roll_window(calendar)
     data.index.name = "date"
