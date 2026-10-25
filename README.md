@@ -48,6 +48,7 @@ sp500-regime-prediction/
 ├── process_data.py    # run the whole processing pipeline + checks in one command
 ├── run_models.py      # baselines + models, walk-forward evaluation, results report
 ├── run_feature_groups.py  # tests extra feature groups (SPY volume, VIX) one at a time
+├── interpret_models.py    # coefficients, SHAP, per-crisis results
 ├── pyproject.toml
 └── requirements.txt
 ```

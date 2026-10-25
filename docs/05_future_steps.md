@@ -9,8 +9,8 @@
 | 5.3 Models: logistic regression, LightGBM, SVM | ✅ Done. Results in [06_modeling.md](06_modeling.md) |
 | 5.3 LSTM | ⏸ Not needed: simple models already match LightGBM |
 | 5.4 Evaluation: PR-AUC, onset PR-AUC, Brier, flips, lead time | ✅ Done |
-| 5.4 Per-crisis results | ⬜ To do |
-| 5.5 Interpretation (coefficients / SHAP) | ⬜ To do |
+| 5.4 Per-crisis results | ✅ Done: 15 stress crises, 7 bear markets ([06_modeling.md](06_modeling.md)) |
+| 5.5 Interpretation (coefficients / SHAP) | ✅ Done: `interpret_models.py` |
 | 5.5 Feature groups: SPY volume, VIX | ✅ Done: both dropped. VIX passes on a common 1993+ sample but loses to the main model in every full-history setup ([06_modeling.md](06_modeling.md)) |
 | 5.5 Other groups (VIX term structure, sector ETFs, breadth) | ⬜ Optional: VIX3M only exists from ~2007, too short to test reliably |
 | 5.6 Literature extensions | ⬜ Optional |
