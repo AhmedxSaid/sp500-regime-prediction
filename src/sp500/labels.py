@@ -7,6 +7,8 @@ import pandas as pd
 from .config import (
     BEAR_MERGE_MAX_GAP,
     BEAR_THRESHOLD,
+    STRESS_FIXED_VOL,
+    STRESS_LOOKBACK,
     STRESS_MIN_HISTORY,
     STRESS_QUANTILE,
     STRESS_WINDOW,
@@ -121,17 +123,31 @@ def stress_labels(
     close: pd.Series,
     window: int = STRESS_WINDOW,
     quantile: float = STRESS_QUANTILE,
+    lookback: int | None = STRESS_LOOKBACK,
     min_history: int = STRESS_MIN_HISTORY,
 ) -> pd.DataFrame:
-    """Stressed = 1 when realized vol is above the expanding `quantile` of PAST realized vol.
+    """Stressed = 1 when realized vol is above the `quantile` of PAST realized vol.
 
+    The threshold uses the previous `lookback` days (rolling), or all history if `lookback` is
+    None (expanding). It is shifted by one day, so it only uses data before day t.
     Returns a DataFrame with the realized vol, the threshold and the label (NaN until enough history).
     """
     rv = realized_vol(close, window)
-    threshold = rv.expanding(min_periods=min_history).quantile(quantile).shift(1)
+    past = rv.expanding(min_periods=min_history) if lookback is None else \
+        rv.rolling(lookback, min_periods=min_history)
+    threshold = past.quantile(quantile).shift(1)
     label = (rv > threshold).astype(float)
     label[rv.isna() | threshold.isna()] = np.nan
     return pd.DataFrame({"rv": rv, "stress_threshold": threshold, "stressed": label})
+
+
+def stress_fixed_labels(close: pd.Series, level: float = STRESS_FIXED_VOL,
+                        window: int = STRESS_WINDOW) -> pd.Series:
+    """Robustness label: stressed = 1 when annualized realized vol is above a fixed `level`."""
+    rv = realized_vol(close, window)
+    label = (rv > level).astype(float)
+    label[rv.isna()] = np.nan
+    return label.rename("stressed_fixed")
 
 
 def make_target(label: pd.Series, horizon: int) -> pd.Series:

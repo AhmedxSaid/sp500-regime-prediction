@@ -36,7 +36,21 @@ from sp500.data_prep import build_dataset  # noqa: E402
 from sp500.features import TARGET_LABELS, build_model_table  # noqa: E402
 
 BEAR_LABELS = ("bear", "bear_merged")          # hindsight labels (main + robustness)
-ALL_LABELS = ("bear", "bear_merged", "bear_recovery", "stressed")
+STRESS_LABELS = ("stressed", "stressed_fixed")  # causal labels (main + robustness)
+ALL_LABELS = ("bear", "bear_merged", "bear_recovery", "stressed", "stressed_fixed")
+
+# Known stress periods (should be mostly stressed) and a very calm year (should not be)
+KNOWN_STRESS = {
+    "Black Monday 1987": ("1987-10-15", "1987-11-30"),
+    "GFC Oct-Nov 2008": ("2008-10-01", "2008-11-30"),
+    "COVID Mar 2020": ("2020-03-01", "2020-04-15"),
+}
+KNOWN_MEDIUM_STRESS = {
+    "1962 flash crash": ("1962-05-01", "1962-07-31"),
+    "1966 sell-off": ("1966-08-01", "1966-10-31"),
+    "1970 bear": ("1970-04-15", "1970-06-30"),
+}
+CALM_YEAR = ("2017-01-01", "2017-12-31")
 from sp500.labels import episodes  # noqa: E402
 
 KNOWN_BEAR_MARKETS = {
@@ -92,6 +106,19 @@ def run_checks(table: pd.DataFrame, daily: pd.DataFrame, horizons) -> list[tuple
             share = window.mean() if len(window) else 0.0
             checks.append((f"`{label}` covers {name}", "PASS" if share >= 0.8 else "WARN",
                            f"{share:.0%} of days labeled bear"))
+
+    # 3a. Stress labels: big crises fully caught (FAIL if not), calm 2017 not stressed,
+    #     medium sell-offs reported as PASS/WARN (the fixed-25% label is expected to miss them)
+    for label in STRESS_LABELS:
+        for name, (a, b) in KNOWN_STRESS.items():
+            share = table.loc[a:b, label].mean()
+            checks.append((f"`{label}` catches {name}", bool(share >= 0.8), f"{share:.0%} of days stressed"))
+        for name, (a, b) in KNOWN_MEDIUM_STRESS.items():
+            share = table.loc[a:b, label].mean()
+            checks.append((f"`{label}` catches {name}", "PASS" if share >= 0.5 else "WARN",
+                           f"{share:.0%} of days stressed"))
+        share = table.loc[CALM_YEAR[0]:CALM_YEAR[1], label].mean()
+        checks.append((f"`{label}` is calm in 2017", bool(share <= 0.05), f"{share:.0%} of days stressed"))
 
     # 3b. Merging only ever adds bear days, never removes them
     checks.append(("`bear_merged` >= `bear` on every day",
@@ -158,7 +185,19 @@ def write_summary(path: Path, daily, table, quality, checks, horizons, feature_c
               "between them lasts at most 126 trading days and stays below the starting peak.",
               "- `bear_recovery`: causal \"20% down and not yet back to the old high\". Used as the "
               "feature `below_peak_regime`, not as a target.",
-              "- `stressed`: 21-day realized vol above the expanding 80th percentile of past vol."]
+              "- `stressed`: **main label**. 21-day realized vol above the 80th percentile of the "
+              "**previous 5 years**' realized vol (unusually volatile for the recent market).",
+              "- `stressed_fixed`: **robustness label**. 21-day realized vol above a fixed 25% a year.",
+              "",
+              "### Stressed share by decade",
+              "",
+              "| Decade | `stressed` (5-year window) | `stressed_fixed` (> 25% vol) |",
+              "|---|---|---|"]
+    decade = (table.index.year // 10) * 10
+    by_dec = table[["stressed", "stressed_fixed"]].groupby(decade).mean()
+    for dec, row in by_dec.iterrows():
+        cells = ["–" if pd.isna(v) else f"{v:.0%}" for v in row]
+        lines.append(f"| {dec}s | {cells[0]} | {cells[1]} |")
 
     merged_eps = episodes(table["bear_merged"])
     lines += ["", "### Bear markets found", "",
@@ -183,7 +222,9 @@ def write_summary(path: Path, daily, table, quality, checks, horizons, feature_c
     counts = {s: sum(st == s for _, st, _ in checks) for s in ("PASS", "WARN", "FAIL")}
     lines += ["", f"## Checks ({counts['PASS']} pass, {counts['WARN']} warn, {counts['FAIL']} fail)", "",
               "WARN on a known-bear-market check means that label splits the bear market at a "
-              "20%+ rally. This is expected for `bear` (the main label) and is the reason `bear_merged` exists.", "",
+              "20%+ rally. This is expected for `bear` (the main label) and is the reason `bear_merged` exists. "
+              "WARN on a medium sell-off for `stressed_fixed` is also expected: a fixed 25% level misses "
+              "stress in calm eras, which is why the main stress label is relative.", "",
               "| Check | Result | Detail |", "|---|---|---|"]
     for name, status, detail in checks:
         lines.append(f"| {name} | {status} | {detail} |")

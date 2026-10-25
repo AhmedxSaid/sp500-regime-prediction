@@ -1,13 +1,13 @@
 # Processing summary
 
-Generated 2026-10-25 15:23 by `process_data.py`.
+Generated 2026-10-25 15:35 by `process_data.py`.
 
 ## Outputs
 
 | Table | Rows | Columns | From | To |
 |---|---|---|---|---|
 | `sp500_daily` | 24,821 | 26 | 1927-12-30 | 2026-10-23 |
-| `model_table` | 24,821 | 27 | 1927-12-30 | 2026-10-23 |
+| `model_table` | 24,821 | 30 | 1927-12-30 | 2026-10-23 |
 
 Final holdout (do not use for tuning): 2022-01-01 onward, 1,207 rows.
 
@@ -27,12 +27,30 @@ Final holdout (do not use for tuning): 2022-01-01 onward, 1,207 rows.
 | `bear` | 20.9% | 27 | 168 | 437 |
 | `bear_merged` | 23.6% | 17 | 268 | 1366 |
 | `bear_recovery` | 50.6% | 12 | 390 | 6219 |
-| `stressed` | 11.7% | 142 | 10 | 241 |
+| `stressed` | 22.0% | 266 | 7 | 256 |
+| `stressed_fixed` | 11.7% | 116 | 14 | 344 |
 
 - `bear`: **main label**. Standard 20% rule, peak to trough.
 - `bear_merged`: **robustness label**. `bear`, with bear markets merged when the rally between them lasts at most 126 trading days and stays below the starting peak.
 - `bear_recovery`: causal "20% down and not yet back to the old high". Used as the feature `below_peak_regime`, not as a target.
-- `stressed`: 21-day realized vol above the expanding 80th percentile of past vol.
+- `stressed`: **main label**. 21-day realized vol above the 80th percentile of the **previous 5 years**' realized vol (unusually volatile for the recent market).
+- `stressed_fixed`: **robustness label**. 21-day realized vol above a fixed 25% a year.
+
+### Stressed share by decade
+
+| Decade | `stressed` (5-year window) | `stressed_fixed` (> 25% vol) |
+|---|---|---|
+| 1920s | – | 19% |
+| 1930s | 17% | 57% |
+| 1940s | 15% | 6% |
+| 1950s | 16% | 2% |
+| 1960s | 18% | 1% |
+| 1970s | 26% | 4% |
+| 1980s | 30% | 5% |
+| 1990s | 29% | 3% |
+| 2000s | 32% | 18% |
+| 2010s | 16% | 7% |
+| 2020s | 19% | 12% |
 
 ### Bear markets found
 
@@ -74,10 +92,12 @@ Final holdout (do not use for tuning): 2022-01-01 onward, 1,207 rows.
 |---|---|---|
 | `target_bear_h5` | 24,816 | 20.9% |
 | `target_bear_merged_h5` | 24,816 | 23.6% |
-| `target_stressed_h5` | 23,540 | 11.7% |
+| `target_stressed_h5` | 23,540 | 22.0% |
+| `target_stressed_fixed_h5` | 24,800 | 11.7% |
 | `target_bear_h21` | 24,800 | 20.9% |
 | `target_bear_merged_h21` | 24,800 | 23.6% |
-| `target_stressed_h21` | 23,540 | 11.7% |
+| `target_stressed_h21` | 23,540 | 22.0% |
+| `target_stressed_fixed_h21` | 24,800 | 11.7% |
 
 ## Feature availability
 
@@ -100,9 +120,9 @@ Final holdout (do not use for tuning): 2022-01-01 onward, 1,207 rows.
 | `es_ret_1d` | 2000-09-19 | 6,041 |
 | `below_peak_regime` | 1927-12-30 | 24,821 |
 
-## Checks (30 pass, 3 warn, 0 fail)
+## Checks (46 pass, 6 warn, 0 fail)
 
-WARN on a known-bear-market check means that label splits the bear market at a 20%+ rally. This is expected for `bear` (the main label) and is the reason `bear_merged` exists.
+WARN on a known-bear-market check means that label splits the bear market at a 20%+ rally. This is expected for `bear` (the main label) and is the reason `bear_merged` exists. WARN on a medium sell-off for `stressed_fixed` is also expected: a fixed 25% level misses stress in calm eras, which is why the main stress label is relative.
 
 | Check | Result | Detail |
 |---|---|---|
@@ -112,12 +132,16 @@ WARN on a known-bear-market check means that label splits the bear market at a 2
 | target_bear_merged_h5 is NaN in the last 5 rows | PASS |  |
 | target_stressed_h5 == stressed.shift(-5) | PASS |  |
 | target_stressed_h5 is NaN in the last 5 rows | PASS |  |
+| target_stressed_fixed_h5 == stressed_fixed.shift(-5) | PASS |  |
+| target_stressed_fixed_h5 is NaN in the last 5 rows | PASS |  |
 | target_bear_h21 == bear.shift(-21) | PASS |  |
 | target_bear_h21 is NaN in the last 21 rows | PASS |  |
 | target_bear_merged_h21 == bear_merged.shift(-21) | PASS |  |
 | target_bear_merged_h21 is NaN in the last 21 rows | PASS |  |
 | target_stressed_h21 == stressed.shift(-21) | PASS |  |
 | target_stressed_h21 is NaN in the last 21 rows | PASS |  |
+| target_stressed_fixed_h21 == stressed_fixed.shift(-21) | PASS |  |
+| target_stressed_fixed_h21 is NaN in the last 21 rows | PASS |  |
 | features + stress label unchanged when data after 2008-06-30 is removed | PASS |  |
 | `bear` covers Great Depression 1929-32 | WARN | 73% of days labeled bear |
 | `bear` covers 1973-74 | PASS | 100% of days labeled bear |
@@ -131,6 +155,20 @@ WARN on a known-bear-market check means that label splits the bear market at a 2
 | `bear_merged` covers GFC 2007-09 | PASS | 100% of days labeled bear |
 | `bear_merged` covers COVID 2020 | PASS | 100% of days labeled bear |
 | `bear_merged` covers Inflation 2022 | PASS | 100% of days labeled bear |
+| `stressed` catches Black Monday 1987 | PASS | 100% of days stressed |
+| `stressed` catches GFC Oct-Nov 2008 | PASS | 100% of days stressed |
+| `stressed` catches COVID Mar 2020 | PASS | 100% of days stressed |
+| `stressed` catches 1962 flash crash | PASS | 91% of days stressed |
+| `stressed` catches 1966 sell-off | PASS | 100% of days stressed |
+| `stressed` catches 1970 bear | PASS | 85% of days stressed |
+| `stressed` is calm in 2017 | PASS | 0% of days stressed |
+| `stressed_fixed` catches Black Monday 1987 | PASS | 97% of days stressed |
+| `stressed_fixed` catches GFC Oct-Nov 2008 | PASS | 100% of days stressed |
+| `stressed_fixed` catches COVID Mar 2020 | PASS | 100% of days stressed |
+| `stressed_fixed` catches 1962 flash crash | WARN | 48% of days stressed |
+| `stressed_fixed` catches 1966 sell-off | WARN | 0% of days stressed |
+| `stressed_fixed` catches 1970 bear | WARN | 38% of days stressed |
+| `stressed_fixed` is calm in 2017 | PASS | 0% of days stressed |
 | `bear_merged` >= `bear` on every day | PASS |  |
 | drawdown is between -1 and 0 | PASS |  |
 | realized vol is non-negative | PASS |  |
@@ -138,4 +176,5 @@ WARN on a known-bear-market check means that label splits the bear market at a 2
 | bear_merged only takes values 0/1 | PASS | [0, 1] |
 | bear_recovery only takes values 0/1 | PASS | [0, 1] |
 | stressed only takes values 0/1 | PASS | [0, 1] |
+| stressed_fixed only takes values 0/1 | PASS | [0, 1] |
 | dates are unique and sorted | PASS |  |

@@ -36,7 +36,13 @@ BEAR_THRESHOLD = 0.20          # 20% drawdown
 BEAR_MERGE_MAX_GAP = 126
 STRESS_WINDOW = 21             # days for realized volatility
 STRESS_QUANTILE = 0.80         # percentile of past realized volatility
+# Main stress label: compare with the PAST 5 YEARS only, so "stressed" means "unusually volatile
+# for the recent market". (An all-history threshold was anchored on the 1930s: 1-2% stressed in
+# the 1950s-60s vs 37% in the 2000s.) Fixed on 2026-10-25 BEFORE any model results; do not tune.
+STRESS_LOOKBACK = 5 * TRADING_DAYS
 STRESS_MIN_HISTORY = 5 * TRADING_DAYS
+# Robustness stress label: absolute level, same meaning in every era
+STRESS_FIXED_VOL = 0.25
 
 # Prediction horizons (trading days ahead)
 HORIZONS = (5, 21)

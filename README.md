@@ -3,7 +3,9 @@
 Predicting **market regimes** of the S&P 500 a few days to a month ahead:
 
 - **Bull / bear** — based on 20% drawdowns from a peak.
-- **Calm / stressed** — based on 21-day realized volatility above its historical 80th percentile.
+- **Calm / stressed** — based on 21-day realized volatility above the 80th percentile of the previous 5 years.
+
+Each regime has a main label and a robustness label (`bear` / `bear_merged`, `stressed` / `stressed_fixed`); results must hold on both.
 
 Our main goal is risk management: an early, well-calibrated warning that the market is entering a bear or high-stress period. We do not try to forecast exact prices.
 
@@ -100,7 +102,7 @@ The data comes from Yahoo Finance; S&P 500 index values belong to S&P Dow Jones 
 
 1. Features use only data available at the close of day *t*.
 2. Targets are labels shifted **forward** (`label.shift(-h)`); features are never shifted backward.
-3. Volatility percentiles use only past data (an expanding window).
+3. Volatility percentiles use only past data (the previous 5 years, shifted by one day).
 4. Validation is walk-forward in time order, with a gap of at least *h* days between train and test.
 5. **2022 onward is the final holdout.** Do not touch it during tuning.
 

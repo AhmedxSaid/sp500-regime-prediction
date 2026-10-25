@@ -31,7 +31,7 @@
 ## 5.5 Interpretation and robustness
 
 - SHAP values / feature importance.
-- **Main vs. robustness bear label:** report every bear result on both `target_bear_h*` (main) and `target_bear_merged_h*` (robustness). The conclusion "model beats baselines" should hold on both. Keep the merge gap fixed at 126 days.
+- **Main vs. robustness labels:** report every bear result on both `target_bear_h*` (main) and `target_bear_merged_h*` (robustness), and every stress result on both `target_stressed_h*` (5-year window) and `target_stressed_fixed_h*` (> 25% vol). The conclusion "model beats baselines" should hold on both. Keep the merge gap (126 days), stress lookback (5 years) and fixed level (25%) unchanged.
 - Vary the label thresholds (15/20/25% drawdown; 75/80/90th volatility percentile), the horizon *h* (5, 10, 21, 63) and the start date.
 - Add feature groups one at a time (VIX term structure → sector ETFs → breadth) and keep a group only if it improves out-of-sample results.
 

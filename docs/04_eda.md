@@ -17,7 +17,7 @@ Notebook: [`notebooks/01_eda.ipynb`](../notebooks/01_eda.ipynb). Figures are sav
 - [ ] Return statistics by decade
 
 ### Volatility
-- [ ] 21-day realized volatility over time, with the expanding 80th-percentile threshold
+- [ ] 21-day realized volatility over time, with the 5-year rolling 80th-percentile threshold and the fixed 25% level
 - [ ] Close-to-close vs. Parkinson vs. Garman-Klass volatility
 
 ### Regimes

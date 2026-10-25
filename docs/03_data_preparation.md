@@ -43,8 +43,26 @@ By default the labels use `^SP500TR` (includes dividends), with `^GSPC` as a fal
 ### Calm / stressed
 
 - 21-day realized volatility: `std(log returns over 21 days) × √252`.
-- Threshold: the **expanding** 80th percentile of past realized volatility, shifted by one day. This uses only past data and needs 5 years of history before the first label.
-- `stressed = 1` if the current realized volatility is above the threshold.
+**Decision (2026-10-25): relative main label + absolute robustness label.**
+
+| Column | Definition | Role |
+|---|---|---|
+| `stressed` | **Main label.** Realized vol above the 80th percentile of the **previous 5 years** of realized vol (rolling window, shifted by one day, so it uses only past data) | Main **target** |
+| `stressed_fixed` | **Robustness label.** Realized vol above a fixed **25% a year** | Second **target**: results must hold on it too |
+
+**Why a 5-year window?** The first version compared against *all* history since 1928. Its threshold was anchored on the 1930s Depression (≈ 50% vol) and took ~50 years to drift down, so the label meant different things in different eras: 1–2% of days stressed in the 1940s–60s vs. 37% in the 2000s, and the 1966 sell-off was missed completely. Five options were compared:
+
+| Threshold | Stressed share across decades | 1966 sell-off caught |
+|---|---|---|
+| All history (old) | 1–37% | 0% |
+| Past 20 years | 2–39% (1970s–80s jump to 32%) | 71% |
+| Past 10 years | 4–32% | 78% |
+| **Past 5 years (chosen)** | **15–32%** | **100%** |
+| Fixed 25% vol | 1–57% | 0% |
+
+The 5-year window gives the most consistent meaning: "unusually volatile compared with the market investors have recently been in". The fixed 25% version answers a different question ("is the market dangerous in absolute terms?") and misses medium sell-offs in calm eras, so it is the robustness check.
+
+`config.STRESS_LOOKBACK` (5 years) and `config.STRESS_FIXED_VOL` (25%) were fixed before any model results. **Do not tune them.**
 
 ### Sanity check
 
@@ -57,18 +75,21 @@ Plot the labels against price and check that they catch the known bear markets: 
 | `bear` (main) | 20.9% | 27 | 168 days | 437 days |
 | `bear_merged` (robustness) | 23.6% | 17 | 268 days | 1,366 days |
 | `bear_recovery` (feature) | 50.6% | 12 | 390 days | 6,219 days |
-| `stressed` | 11.7% | 142 | 10 days | 241 days |
+| `stressed` (main, 5-year window) | 22.0% | 266 | 7 days | 256 days |
+| `stressed_fixed` (robustness, > 25% vol) | 11.7% | 116 | 14 days | 344 days |
 
 - `bear` fully captures 1973–74, 2020 and 2022, and 92% of 2007–09. It **splits** 1929–32 (73% covered) and 2000–02 (55%), because each had a bear-market rally of more than 20%.
 - `bear_merged` joins these: 1929–35 becomes one episode, as do 2000–02 and 2007–09. 1929–32 is then 100% covered, and 2000–02 is 74%. The remaining dot-com gap has two causes:
   - The label uses the total-return index, which peaked in **Sept 2000** (dividends kept it rising), while the price index peaked in March 2000.
   - The final Aug → Oct 2002 drop was less than 20% from the August high, so it is not a new bear.
+- `stressed` now has many short episodes (median 7 days). Brief volatility spikes count as stress, so expect more signal flips. The stability metric in evaluation should account for this.
+- Both stress labels fully catch Black Monday 1987, Oct–Nov 2008 and March 2020, and neither marks calm 2017 as stressed. Only `stressed` catches the 1962, 1966 and 1970 sell-offs.
 - `bear_recovery` marks half of all days as bear. After 1929 the index only regained its peak in 1954. That's why it's a feature, not a target.
 - The full episode list, with which episodes were merged, is in [`reports/processing_summary.md`](../reports/processing_summary.md).
 
 ## Step 3 — Prediction target
 
-`target_{label}_h{h} = label.shift(-h)` for label ∈ {`bear`, `bear_merged`, `stressed`} and h ∈ {5, 21}, giving 6 targets.
+`target_{label}_h{h} = label.shift(-h)` for label ∈ {`bear`, `bear_merged`, `stressed`, `stressed_fixed`} and h ∈ {5, 21}, giving 8 targets.
 
 We predict the regime **h days ahead**, not today's regime. Labels are shifted forward; features are never shifted backward. The last *h* rows have no target and are dropped at training time.
 
