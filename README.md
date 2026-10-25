@@ -106,7 +106,7 @@ A full-history snapshot (downloaded from Yahoo Finance on 2026-10-25, through 20
 | `sp500tr.csv` | S&P 500 total return | `^SP500TR` | 1988-01-04 → 2026-10-23 | 9,776 | Bull/bear labels including dividends |
 | `spy.csv` | SPY ETF | `SPY` | 1993-01-29 → 2026-10-23 | 8,492 | Real traded volume |
 | `es.csv` | E-mini S&P 500 futures | `ES=F` | 2000-09-18 → 2026-10-23 | 6,590 | Futures moves (watch quarterly roll jumps) |
-| `vix.csv` | CBOE Volatility Index | `^VIX` | 1990-01-02 → 2026-10-23 | 9,273 | Implied-volatility features (tested; not in the primary model) |
+| `vix.csv` | CBOE Volatility Index | `^VIX` | 1990-01-02 → 2026-10-23 | 9,273 | Implied-volatility features (tested three ways; not used) |
 
 Committing the snapshot means everyone works on exactly the same data, even if Yahoo later revises or removes history. Details and known issues: [data/raw/README.md](data/raw/README.md) and [docs/02_data_understanding.md](docs/02_data_understanding.md).
 

@@ -111,11 +111,17 @@ def run_walk_forward(
     holdout_start: str,
     models: tuple[str, ...] = MODELS,
     log=print,
+    allow_missing: tuple[str, ...] = (),
 ) -> pd.DataFrame:
-    """Return long-format predictions: date, label, horizon, method, prob, truth, current."""
+    """Return long-format predictions: date, label, horizon, method, prob, truth, current.
+
+    `allow_missing`: features that may be NaN (e.g. VIX before 1990). Rows are only required to
+    have the other features. Use with LightGBM only, which handles missing values natively.
+    """
     end = pd.Timestamp(holdout_start) - pd.Timedelta(days=1)
     data = table.loc[start:end]
-    data = data[data[features].notna().all(axis=1)]
+    required = [f for f in features if f not in allow_missing]
+    data = data[data[required].notna().all(axis=1)]
     rows = []
 
     splits = list(walk_forward_splits(data.index, first_test_year, gap, holdout_start=holdout_start))

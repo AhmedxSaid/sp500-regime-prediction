@@ -112,7 +112,18 @@ Code: [`run_feature_groups.py`](../run_feature_groups.py). Full tables: [`report
 
 **Decision:** the **main 1962 model (13 features, no VIX) stays the primary model**. The VIX model is kept for reference ([`reports/model_results_modern.md`](../reports/model_results_modern.md), `python run_models.py --features modern`).
 
-**Possible follow-up:** LightGBM can train with missing values, so it could use the full 1962+ history with VIX left empty before 1990. That would get both benefits. It hasn't been tested.
+**Last check: VIX on the full history.** LightGBM can train with missing values, so it was trained from 1962 with the VIX features left empty before 1990, and compared with LightGBM on the main features on identical rows and test years 2000–2021. The same thresholds were used, applied to LightGBM only, since logistic regression can't take missing values. Full tables: [`reports/feature_groups_vix_hybrid.md`](../reports/feature_groups_vix_hybrid.md).
+
+| LightGBM, 2000–2021 | Bear 5d | Bear 21d | Stressed 5d | Stressed 21d | Mean (main) |
+|---|---|---|---|---|---|
+| Main features | **0.312** | **0.247** | **0.955** | **0.721** | **0.559** |
+| + VIX (missing before 1990) | 0.275 | 0.230 | 0.952 | 0.703 | 0.540 |
+
+- **Result: −0.018 mean PR-AUC (−0.018 on the robustness labels too) → ❌ drop.**
+- Onset PR-AUC is unchanged (+0.001). Only `stressed_fixed` at 21 days improves (0.602 → 0.629).
+- Year by year it beats the main set in 12 of 16 years on stressed-21d, but it's worse when all years are pooled. Its probabilities seem less consistent across years: before 1990 the model learned from rows with VIX missing, after 1990 from rows with VIX present.
+
+**Final decision on VIX: not used.** All three ways of adding it (common 1993+ sample, separate 1990+ model, full history with VIX missing) either fail the rule or lose to the main model on the same test years.
 
 **Side finding (2000–2021 only):** for **bear**, the simple baselines are as good as or better than the models. At 21 days, the 2-state HMM scores 0.352 and the 200-day-MA rule 0.317, vs. 0.268 for logistic regression. The models' bear advantage in the full 1980–2021 test comes mostly from the 1980s–90s.
 
@@ -120,7 +131,7 @@ Code: [`run_feature_groups.py`](../run_feature_groups.py). Full tables: [`report
 
 1. **Stress is predictable; bear-market starts are not.** For the report: the useful product is a calibrated "stress in the next 1–4 weeks" probability.
 2. **Logistic regression is the recommended main model:** best or tied-best on most metrics, simple, and interpretable. LightGBM is a close second, and the SVM is third.
-3. **Long history beats extra data sources.** SPY volume doesn't help. VIX helps a little, but not enough to justify losing 1962–1989. The primary model keeps the 13 main features.
+3. **Long history beats extra data sources.** SPY volume doesn't help. VIX helps a little on a common 1993+ sample, but it loses to the main model whether it's used in a 1990+ model or on the full history with missing values. The primary model keeps the 13 main features.
 4. **For bear markets, simple rules are hard to beat** in recent decades (2000–2021).
 3. **The SVM result is relevant to the literature:** in this regime task, an RBF SVM doesn't beat simpler models, unlike the price-level forecasts in Sheta et al. Note that we use a much longer test period (42 years vs. 43 weekly points).
 

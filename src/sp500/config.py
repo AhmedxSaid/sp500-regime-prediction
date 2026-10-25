@@ -80,7 +80,9 @@ GROUP_MAX_ONSET_LOSS = 0.01
 # VIX only exists from 1990, so it forms a separate "modern" model rather than joining the 1962 one.
 # On the same test years (2000-2021) the 1962 model WITHOUT VIX beats the 1990 model WITH VIX
 # (e.g. stressed 21d PR-AUC 0.725 vs 0.674): the extra history is worth more than VIX.
-# -> FEATURES_MAIN (1962) stays the primary model; FEATURES_MODERN is kept for reference.
+# LightGBM from 1962 with VIX missing before 1990 (run_feature_groups.py --vix-hybrid):
+# -0.018 mean PR-AUC vs. the main features -> DROPPED.
+# -> FEATURES_MAIN (1962) stays the primary model; VIX is not used. FEATURES_MODERN is kept for reference.
 FEATURES_MODERN = FEATURES_MAIN + FEATURE_GROUPS["vix"]
 MODERN_START = "1990-02-01"
 MODERN_FIRST_TEST_YEAR = 2000
