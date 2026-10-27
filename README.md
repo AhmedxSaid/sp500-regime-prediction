@@ -27,6 +27,15 @@ The project follows a CRISP-DM–style workflow:
 - **Bear-market starts are not predictable.** Models recognize bear markets after the fall has begun (2–3 weeks after the peak in 2022) and tie with a simple 200-day-moving-average rule.
 | Related work | [docs/literature.md](docs/literature.md) | – |
 
+## The whole project in one notebook
+
+[`notebooks/sp500_regime_prediction.ipynb`](notebooks/sp500_regime_prediction.ipynb) runs everything from raw data to the final holdout test, in the order of the report's chapters: data understanding, preprocessing, labels and features, EDA and hypothesis tests, feature selection, walk-forward modeling, interpretation, per-crisis results and the holdout.
+
+- **Already run:** the outputs (tables and charts) show directly on GitHub.
+- **Same code as the scripts:** the function definitions are copied from `src/sp500/` and the scripts, so the results match the report exactly.
+- **Self-contained:** it doesn't need `pip install -e .`. If `data/raw/` isn't next to it (e.g. in Google Colab), it downloads the CSVs from this repository.
+- **Runtime:** about 4–5 minutes from top to bottom.
+
 ## Repository layout
 
 ```
@@ -37,6 +46,7 @@ sp500-regime-prediction/
 ├── docs/              # one document per project phase
 │   └── figures/       # figures used in the docs
 ├── notebooks/
+│   ├── sp500_regime_prediction.ipynb  # THE WHOLE PROJECT in one notebook (already run)
 │   ├── 00_data_understanding.ipynb  # sources + quality (already run; results visible on GitHub)
 │   └── 01_eda.ipynb   # exploratory data analysis
 ├── reports/
