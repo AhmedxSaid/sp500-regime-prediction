@@ -8,6 +8,9 @@ reports/*.csv
 reports/figures/*
 !reports/figures/.gitkeep
 
+# Working copy of the presentation (published as a Claude artifact)
+_deck/
+
 # Python
 __pycache__/
 *.py[cod]

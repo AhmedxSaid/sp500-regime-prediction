@@ -15,7 +15,7 @@
 | 5.5 Other groups (VIX term structure, sector ETFs, breadth) | ⬜ Optional: VIX3M only exists from ~2007, too short to test reliably |
 | 5.6 Literature extensions | ⬜ Optional |
 | 5.7 Final holdout (2022+) | ✅ Done once, 2026-10-27 ([07_final_evaluation.md](07_final_evaluation.md)) |
-| 5.7 Final written report / presentation | ⬜ To do (all results are in docs/01–07) |
+| 5.7 Final written report / presentation | ✅ Done: written report (Claude Doc) and 16-slide deck, 2026-10-27 |
 
 ## 5.1 Validation design
 

@@ -41,4 +41,19 @@ S&P 500 → GARCH → simulated markets → technical indicators → SVM → bul
 
 This is relevant to our project because it measures how classifier performance changes across market regimes.
 
-<!-- TODO: add full citations (authors, year, journal, DOI) -->
+## What our results add
+
+- **Sheta et al.:** in our regime task, with 42 test years instead of 43 weekly points, the RBF SVM ranked **third**, behind logistic regression and LightGBM (see [06_modeling.md](06_modeling.md)).
+- **Chen et al.:** consistent with their finding, adding data sources (SPY volume, VIX) did not improve our final model ([06_modeling.md](06_modeling.md), feature group tests).
+- **Rosillo et al.:** our per-crisis analysis gives a real-data counterpart to their per-regime simulation; their GARCH approach remains future work.
+
+## References
+
+1. Rosillo, R., Giner, J., & de la Fuente, D. (2014). Stock market simulation using support vector machines. *Journal of Forecasting*, 33(6), 488–500. [doi:10.1002/for.2302](https://doi.org/10.1002/for.2302) (verified).
+2. Sheta, A. F., Ahmed, S. E. M., & Faris, H. (2015). A comparison between regression, artificial neural networks and support vector machines for predicting stock market index. **TODO: verify journal, volume and pages** (secondary sources disagree on the venue).
+3. Chen et al. (2017). AdaBoost QGA-SVM study on financial news and trading signals. **TODO: complete from the team's original source** (a DOI was in the initial research notes; not found by web search).
+4. Pagan, A. R., & Sossounov, K. A. (2003). A simple framework for analysing bull and bear markets. *Journal of Applied Econometrics*, 18(1), 23–46.
+5. Lunde, A., & Timmermann, A. (2004). Duration dependence in stock prices: an analysis of bull and bear markets. *Journal of Business & Economic Statistics*, 22(3), 253–273.
+6. Parkinson, M. (1980). The extreme value method for estimating the variance of the rate of return. *Journal of Business*, 53(1), 61–65.
+7. Ke, G., et al. (2017). LightGBM: a highly efficient gradient boosting decision tree. *Advances in Neural Information Processing Systems*, 30.
+8. Lundberg, S. M., & Lee, S.-I. (2017). A unified approach to interpreting model predictions. *Advances in Neural Information Processing Systems*, 30.

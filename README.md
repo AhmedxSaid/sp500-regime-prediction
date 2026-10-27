@@ -128,7 +128,11 @@ The data comes from Yahoo Finance; S&P 500 index values belong to S&P Dow Jones 
 
 ## Team
 
-<!-- Add team members, roles and contact here -->
+- Ahmed Said
+- Fares Dhiab
+- Farouk Guerdelli
+- Hichem Ferjani
+- Mahdi Fakhfakh
 
 ## License
 
