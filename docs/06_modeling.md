@@ -225,4 +225,4 @@ When did each method first say ≥ 50% "bear within 21 days", counted from the m
 
 ## Next steps
 
-See [05_future_steps.md](05_future_steps.md). In short: run the 2022+ holdout **once** with the final setup (main features, logistic regression and LightGBM, both labels), then write the final report.
+The 2022+ holdout has been run once with this setup: see [07_final_evaluation.md](07_final_evaluation.md).

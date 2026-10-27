@@ -14,7 +14,8 @@
 | 5.5 Feature groups: SPY volume, VIX | ✅ Done: both dropped. VIX passes on a common 1993+ sample but loses to the main model in every full-history setup ([06_modeling.md](06_modeling.md)) |
 | 5.5 Other groups (VIX term structure, sector ETFs, breadth) | ⬜ Optional: VIX3M only exists from ~2007, too short to test reliably |
 | 5.6 Literature extensions | ⬜ Optional |
-| 5.7 Final holdout (2022+) and report | ⬜ To do, last |
+| 5.7 Final holdout (2022+) | ✅ Done once, 2026-10-27 ([07_final_evaluation.md](07_final_evaluation.md)) |
+| 5.7 Final written report / presentation | ⬜ To do (all results are in docs/01–07) |
 
 ## 5.1 Validation design
 

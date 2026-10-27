@@ -18,9 +18,13 @@ The project follows a CRISP-DM–style workflow:
 | 3. Data preparation | [docs/03_data_preparation.md](docs/03_data_preparation.md) | `src/sp500/data_prep.py`, `labels.py`, `features.py` |
 | 4. Exploratory data analysis | [docs/04_eda.md](docs/04_eda.md) | `notebooks/01_eda.ipynb` |
 | 5. Future steps (plan & status) | [docs/05_future_steps.md](docs/05_future_steps.md) | – |
-| 6. Modeling & evaluation | [docs/06_modeling.md](docs/06_modeling.md) | `run_models.py`, `src/sp500/models.py`, `validation.py` |
+| 6. Modeling & evaluation | [docs/06_modeling.md](docs/06_modeling.md) | `run_models.py`, `run_feature_groups.py`, `interpret_models.py`, `src/sp500/models.py` |
+| 7. Final evaluation (2022+ holdout) | [docs/07_final_evaluation.md](docs/07_final_evaluation.md) | `run_holdout.py` |
 
-**Headline result (walk-forward 1980–2021):** stress in the next 21 days is predictable. Logistic regression reaches PR-AUC 0.66 vs. 0.51 for "no change" and identifies upcoming stress on calm days about twice as well. Bear-market *starts* are not predictable; models only recognize bear markets once they are underway.
+**Headline results:**
+- **Short-term stress is predictable.** For "stressed within 5 days", the models beat every baseline in 42 years of walk-forward validation (PR-AUC 0.93 vs. 0.78) **and** in the untouched 2022–2026 holdout (0.94–0.95 vs. 0.78; bootstrap 95% CI of the gain +0.10 to +0.28).
+- **One-month stress:** the models also lead (holdout 0.55–0.59 vs. 0.38–0.49) and are far better at predicting stress *starting* (onset PR-AUC 0.52–0.62 vs. 0.08), but the holdout is too short to make this conclusive.
+- **Bear-market starts are not predictable.** Models recognize bear markets after the fall has begun (2–3 weeks after the peak in 2022) and tie with a simple 200-day-moving-average rule.
 | Related work | [docs/literature.md](docs/literature.md) | – |
 
 ## Repository layout
@@ -49,6 +53,7 @@ sp500-regime-prediction/
 ├── run_models.py      # baselines + models, walk-forward evaluation, results report
 ├── run_feature_groups.py  # tests extra feature groups (SPY volume, VIX) one at a time
 ├── interpret_models.py    # coefficients, SHAP, per-crisis results
+├── run_holdout.py         # ONE-TIME final test on 2022+ (already run; use --report-only)
 ├── pyproject.toml
 └── requirements.txt
 ```
@@ -119,7 +124,7 @@ The data comes from Yahoo Finance; S&P 500 index values belong to S&P Dow Jones 
 2. Targets are labels shifted **forward** (`label.shift(-h)`); features are never shifted backward.
 3. Volatility percentiles use only past data (the previous 5 years, shifted by one day).
 4. Validation is walk-forward in time order, with a gap of at least *h* days between train and test.
-5. **2022 onward is the final holdout.** Do not touch it during tuning.
+5. **2022 onward is the final holdout.** It was used exactly once, on 2026-10-27, after every decision had been fixed ([docs/07_final_evaluation.md](docs/07_final_evaluation.md)). Any further changes to the models can no longer be honestly tested on it.
 
 ## Team
 
