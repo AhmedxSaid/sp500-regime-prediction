@@ -16,7 +16,7 @@ The project follows a CRISP-DM–style workflow:
 | 1. Business understanding | [docs/01_business_understanding.md](docs/01_business_understanding.md) | – |
 | 2. Data understanding | [docs/02_data_understanding.md](docs/02_data_understanding.md) | `notebooks/00_data_understanding.ipynb`, `src/sp500/data_download.py` |
 | 3. Data preparation | [docs/03_data_preparation.md](docs/03_data_preparation.md) | `src/sp500/data_prep.py`, `labels.py`, `features.py` |
-| 4. Exploratory data analysis | [docs/04_eda.md](docs/04_eda.md) | `notebooks/01_eda.ipynb` |
+| 4. Exploratory data analysis | [docs/04_eda.md](docs/04_eda.md) | `notebooks/01_eda.ipynb`, `run_statistical_tests.py` |
 | 5. Future steps (plan & status) | [docs/05_future_steps.md](docs/05_future_steps.md) | – |
 | 6. Modeling & evaluation | [docs/06_modeling.md](docs/06_modeling.md) | `run_models.py`, `run_feature_groups.py`, `interpret_models.py`, `src/sp500/models.py` |
 | 7. Final evaluation (2022+ holdout) | [docs/07_final_evaluation.md](docs/07_final_evaluation.md) | `run_holdout.py` |
@@ -50,6 +50,7 @@ sp500-regime-prediction/
 │   ├── features.py       # step 3: features + labels -> model table
 │   └── validation.py     # walk-forward splits with a gap
 ├── process_data.py    # run the whole processing pipeline + checks in one command
+├── run_statistical_tests.py  # hypothesis tests + validation vs. holdout comparison
 ├── run_models.py      # baselines + models, walk-forward evaluation, results report
 ├── run_feature_groups.py  # tests extra feature groups (SPY volume, VIX) one at a time
 ├── interpret_models.py    # coefficients, SHAP, per-crisis results
@@ -85,6 +86,12 @@ This cleans and aligns the raw CSVs, builds labels, targets and features, runs 2
 | [`reports/processing_summary.md`](reports/processing_summary.md) | Row counts, regime stats, every bear market found, feature start dates, check results |
 
 Options: `--horizons 5 10 21` (prediction horizons), `--format csv|parquet|both`.
+
+Run the hypothesis tests and the validation-vs-holdout comparison (writes [`reports/statistical_tests.md`](reports/statistical_tests.md); a few seconds):
+
+```bash
+python run_statistical_tests.py
+```
 
 Then train and evaluate the baselines and models (walk-forward, about 2 minutes):
 

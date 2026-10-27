@@ -98,6 +98,38 @@ Volatility in the 1930s was three times that of the 1960s. A threshold based on 
 
 - **Implication:** linear models and SVM get a reduced feature set without the duplicates. Gradient boosting would cope, but uses the same set so results are comparable.
 
+### 9. Hypothesis tests confirm the findings
+
+Script: [`run_statistical_tests.py`](../run_statistical_tests.py). Full output: [`reports/statistical_tests.md`](../reports/statistical_tests.md). Test 1 uses the full history; Tests 2–4 use 1962–2021, the modeling period.
+
+| Test | H0 | Result | Effect size | Decision |
+|---|---|---|---|---|
+| Ljung–Box (20 lags), daily returns | No autocorrelation | Q = 98.4, p < 0.001 | lag-1 autocorrelation −0.007 | Reject H0, but the effect is negligible |
+| Ljung–Box (20 lags), absolute returns | No autocorrelation | Q = 37,890.5, p < 0.001 | lag-1 autocorrelation 0.32 | Reject H0: volatility clusters |
+| Chi-square, stressed today vs. in 21 days | Independent | χ²(1) = 3,804.9, p < 0.001 | Cramér's V = 0.50 | Reject H0: stress persists |
+| Mann–Whitney, 21-day volatility by stressed in 21 days | Same distribution | U = 3.31 × 10⁷, p < 0.001 | r = 0.52 (medians 16.7% vs. 10.8%) | Reject H0 |
+| Mann–Whitney, distance from 200-day average by bear in 21 days | Same distribution | U = 6.30 × 10⁶, p < 0.001 | r = −0.57 (medians −4.0% vs. +4.8%) | Reject H0 |
+
+- **Normality:** a Jarque–Bera test rejects it for daily returns (JB = 361,599, p < 0.001).
+- **Effect sizes matter most:** daily observations are autocorrelated and the samples are large, so the p-values overstate the evidence.
+- **Why Mann–Whitney:** the features are skewed, so a t-test isn't suitable. The chi-square test's smallest expected count is 994, well above 5.
+
+### 10. The holdout period differs from the validation period
+
+| Measure | Validation 1962–2021 | Holdout 2022–2026 |
+|---|---|---|
+| Trading days | 15,105 | 1,207 |
+| Annual return / volatility | 7.0% / 16.4% | 9.8% / 17.1% |
+| Share of days in a bear market | 15.2% | 16.2% |
+| Share of days stressed (main label) | 25.7% | 15.5% |
+| Share of days stressed (fixed 25% label) | 7.1% | 10.4% |
+| Median 21-day realized volatility | 11.8% | 13.6% |
+| Deepest drawdown from a peak | −56.8% | −25.4% |
+
+- **Higher volatility, but rarer stress:** in the holdout, volatility was higher in absolute terms, but stress by the main label was rarer. Its 5-year window still includes the very volatile 2020, which raises the threshold.
+- **The distributions differ:** a Kolmogorov–Smirnov test confirms that 21-day volatility is distributed differently in the two periods (D = 0.18, p < 0.001).
+- **Implication:** a lower base rate lowers PR-AUC for every method, so holdout results must be compared with the baselines *on the same period* ([07_final_evaluation.md](07_final_evaluation.md)).
+
 ## Checklist
 
 ### Structure and quality
@@ -129,3 +161,7 @@ Volatility in the 1930s was three times that of the 1960s. A threshold based on 
 - [x] Correlation heatmap of features
 - [x] Feature distributions split by future regime
 - [x] Persistence: P(regime at t+h | regime at t)
+
+### Statistical testing
+- [x] Hypothesis tests with effect sizes (`run_statistical_tests.py`)
+- [x] Validation vs. holdout comparison
