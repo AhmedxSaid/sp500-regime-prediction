@@ -20,12 +20,22 @@ The project follows a CRISP-DM–style workflow:
 | 5. Future steps (plan & status) | [docs/05_future_steps.md](docs/05_future_steps.md) | – |
 | 6. Modeling & evaluation | [docs/06_modeling.md](docs/06_modeling.md) | `run_models.py`, `run_feature_groups.py`, `interpret_models.py`, `src/sp500/models.py` |
 | 7. Final evaluation (2022+ holdout) | [docs/07_final_evaluation.md](docs/07_final_evaluation.md) | `run_holdout.py` |
+| 8. Extension: min / max price + dashboard | [docs/08_price_range.md](docs/08_price_range.md) | `run_range_models.py`, `dashboard/app.py`, `src/sp500/patterns.py`, `candles.py`, `range_*.py` |
 
 **Headline results:**
 - **Short-term stress is predictable.** For "stressed within 5 days", the models beat every baseline in 42 years of walk-forward validation (PR-AUC 0.93 vs. 0.78) **and** in the untouched 2022–2026 holdout (0.94–0.95 vs. 0.78; bootstrap 95% CI of the gain +0.10 to +0.28).
 - **One-month stress:** the models also lead (holdout 0.55–0.59 vs. 0.38–0.49) and are far better at predicting stress *starting* (onset PR-AUC 0.52–0.62 vs. 0.08), but the holdout is too short to make this conclusive.
 - **Bear-market starts are not predictable.** Models recognize bear markets after the fall has begun (2–3 weeks after the peak in 2022) and tie with a simple 200-day-moving-average rule.
 | Related work | [docs/literature.md](docs/literature.md) | – |
+
+## Extension: min / max price dashboard
+
+XGBoost, CatBoost and an LSTM predict the **highest and lowest S&P 500 price over the next 5 and 21 trading days** (10/50/90% quantiles), using the regime features plus candlestick pattern recognition and weekly / monthly candle features. Next-week ranges beat the volatility baseline in walk-forward and in the 2022+ holdout; next-month lows do not. Details: [docs/08_price_range.md](docs/08_price_range.md).
+
+```bash
+python run_range_models.py       # ~6 min
+streamlit run dashboard/app.py
+```
 
 ## The whole project in one notebook
 
