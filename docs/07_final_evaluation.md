@@ -100,3 +100,14 @@ The models were fitted **once** (26 seconds). The report can be rebuilt from the
 - **Label choices:** results depend on the definitions (20% rule, 5-year stress window). The robustness labels gave the same picture in validation. In the holdout, LightGBM slipped below the HMM on the fixed-stress 21-day target (0.359 vs. 0.375), while logistic regression stayed ahead (0.437).
 - **Data:** a single source (Yahoo Finance); 4 suspected bad prints before 1962 were corrected by rule.
 - **No trading test:** the project measures prediction quality, not profits after costs.
+
+## After the holdout: live check
+
+The holdout used data through **2026-10-23**. `run_holdout.py` stops at that day (`HOLDOUT_END` in `config.py`), so refreshed data reproduces every number above. Days after it are scored separately by [`run_live_check.py`](../run_live_check.py), with models trained only on data known before 2026-10-23. Results: [`reports/live_check.md`](../reports/live_check.md).
+
+The first run (2026-10-23 → 2026-11-24, 23 trading days) agrees with the holdout:
+- **Stress onset not anticipated:** for the episode that began on 2026-11-05, P(stressed within 21 days) was 4–15% a month earlier.
+- **Ongoing stress well predicted:** P(stressed within 5 days) was 0.6–1.0 from the first stressed day on.
+- **No false bear alarm:** bear probabilities stayed at 0–7% during an 11% peak-to-trough fall.
+
+With one onset, this is a sanity check rather than a new estimate; the record grows with each refresh.
