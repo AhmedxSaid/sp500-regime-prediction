@@ -1,7 +1,7 @@
 """Live check: score the models on trading days that no model or report has ever seen.
 
-Every result in the repo (validation and the one-time 2022+ holdout) used data up to the
-2026-10-23 snapshot. This script trains on data known at that cut-off only, exactly like one
+Every regime result in the repo (validation and the one-time 2022+ holdout) used data up to the
+2026-10-23 snapshot (config.HOLDOUT_END). This script trains on data known at that cut-off only, exactly like one
 walk-forward fold, and scores the forecasts made from the cut-off onward against what happened.
 
   * Regime models (FEATURES_MAIN, all baselines and models, all 4 labels, h = 5 and 21):
@@ -36,7 +36,7 @@ sys.path.insert(0, str(ROOT))
 
 from run_range_models import TARGETS, fit_predict_block  # noqa: E402
 from sp500.config import (  # noqa: E402
-    DATA_PROCESSED, FEATURES_MAIN, HORIZONS, MODEL_START, REPORTS, SVM_TRAIN_EVERY, WALK_FORWARD_GAP,
+    DATA_PROCESSED, FEATURES_MAIN, HOLDOUT_END, HORIZONS, MODEL_START, REPORTS, SVM_TRAIN_EVERY, WALK_FORWARD_GAP,
 )
 from sp500.features import bear_price_series  # noqa: E402
 from sp500.labels import episodes  # noqa: E402
@@ -46,7 +46,7 @@ from sp500.models import (  # noqa: E402
 from sp500.range_data import RANGE_HORIZONS, build_range_table, feature_columns  # noqa: E402
 from sp500.range_models import MODEL_NAMES, MODELS as RANGE_MODELS  # noqa: E402
 
-DEFAULT_CUTOFF = "2026-10-23"  # last trading day of the snapshot all earlier results used
+DEFAULT_CUTOFF = HOLDOUT_END  # last trading day of the data the one-time holdout used
 LABELS = ("stressed", "stressed_fixed", "bear", "bear_merged")
 NAMES = {"persistence": "Baseline: no change", "ma200_rule": "Baseline: price < 200-day MA",
          "hmm": "Baseline: 2-state HMM", "logreg": "Logistic regression", "lightgbm": "LightGBM",
@@ -173,8 +173,8 @@ def main() -> int:
     px = daily["gspc_close"]
     L = ["# Live check", "",
          f"Generated {datetime.now():%Y-%m-%d %H:%M} by `run_live_check.py` ({(time.time()-t0)/60:.1f} min). "
-         f"Models trained only on data known before **{cutoff.date()}** (the last day of the snapshot every "
-         f"other result used); forecasts made at each close from {cutoff.date()} to {last.date()} "
+         f"Models trained only on data known before **{cutoff.date()}** (the last day of the data every "
+         f"regime result used); forecasts made at each close from {cutoff.date()} to {last.date()} "
          f"({len(live_days)} trading days). Same features, settings and gaps as validation; nothing tuned.", "",
          f"S&P 500: {px.loc[cutoff]:,.0f} at the cut-off → {px.loc[last]:,.0f} on {last.date()} "
          f"({px.loc[last] / px.loc[cutoff] - 1:+.1%}); lowest close {px.loc[cutoff:].min():,.0f} "

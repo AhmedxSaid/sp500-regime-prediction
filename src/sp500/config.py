@@ -50,6 +50,10 @@ HORIZONS = (5, 21)
 
 # Final holdout: never used for tuning
 HOLDOUT_START = "2022-01-01"
+# The one-time holdout test (2026-10-27) used data through this day. run_holdout.py and
+# run_statistical_tests.py stop here so they reproduce that test on refreshed data; days after it
+# are scored by run_live_check.py instead.
+HOLDOUT_END = "2026-10-23"
 
 # ---------------------------------------------------------------------------
 # Modeling setup. Fixed on 2026-10-25 BEFORE any model results; do not tune.

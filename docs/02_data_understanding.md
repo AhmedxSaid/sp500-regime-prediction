@@ -5,6 +5,8 @@ This phase describes **where the data comes from** (sources) and **how good it i
 - **Full analysis, with code and outputs:** [`notebooks/01_data_understanding.ipynb`](../notebooks/01_data_understanding.ipynb). It is already run, so the results show on GitHub.
 - **Figures:** [`docs/figures/`](figures/)
 
+> **Snapshot note (2026-11-25):** the dates, row counts and quality figures in this chapter describe the first snapshot (through 2026-10-23), which every regime result uses. `data/raw/` has since been refreshed to 2026-11-24. The refresh also changed two things in the raw files: rows that only have a close (`^GSPC` before 1962, `^VIX` 1990–91, `^SP500TR` before 2009) now store open/high/low as empty instead of copies of the close, and the download skips an unfinished trading day. Re-running the notebook on the new files therefore shows 0 "flat OHLC" rows; cleaning gives the same result either way. Current counts: [`data/raw/README.md`](../data/raw/README.md).
+
 ## 2.1 Sources
 
 All four series were downloaded from **Yahoo Finance** on 2026-10-25 and run through 2026-10-23.

@@ -67,8 +67,12 @@ quick run had already printed holdout numbers, so the CatBoost holdout result is
 
 - **Walk-forward 2000–2021:** retrain every 2 years on all earlier data, with a 21-day gap
   plus *h* days so no training target overlaps the test block.
-- **Holdout 2022-01-01 → 2026-10-23:** one model per method trained on data before 2022.
-  This is a new target, so the holdout is fresh for this task (the regime holdout rule is untouched).
+- **Holdout 2022-01-01 → 2026-11-24** (last day with a known target): one model per method trained
+  on data before 2022. This is a new target, so the holdout is fresh for this task (the regime
+  holdout rule is untouched). Unlike the one-time regime holdout, it grows with each data refresh.
+- **Live check:** `run_live_check.py` also scores the range models on the days after the
+  2026-10-23 snapshot, with models trained only on data known before them
+  ([`reports/live_check.md`](../reports/live_check.md)).
 - **Final models** are trained on all data and make the forecast shown in the dashboard.
 
 Metrics: MAE of the median (in % of price), pinball (quantile) loss, coverage of the 80% band,
@@ -83,13 +87,16 @@ Pinball loss ×100 (lower is better). Full tables: [`reports/range_results.md`](
 | **Walk-forward 2000–2021** | | | | | |
 | Max, next 5 days | 0.297 | 0.290 | 0.289 | 0.291 | **0.288** |
 | Min, next 5 days | 0.410 | 0.405 | 0.407 | 0.405 | **0.404** |
-| Max, next 21 days | 0.544 | 0.567 | 0.565 | **0.538** | 0.542 |
-| Min, next 21 days | **0.905** | 0.921 | 0.940 | 0.906 | 0.911 |
+| Max, next 21 days | 0.544 | 0.562 | 0.565 | **0.538** | 0.541 |
+| Min, next 21 days | **0.905** | 0.924 | 0.940 | 0.907 | 0.912 |
 | **Holdout 2022+** | | | | | |
-| Max, next 5 days | 0.313 | **0.297** | **0.297** | 0.303 | 0.298 |
-| Min, next 5 days | 0.400 | 0.394 | **0.393** | 0.395 | **0.393** |
-| Max, next 21 days | 0.575 | 0.554 | **0.549** | 0.570 | 0.555 |
-| Min, next 21 days | **0.799** | 0.811 | 0.833 | 0.819 | 0.816 |
+| Max, next 5 days | 0.313 | **0.296** | **0.296** | 0.302 | 0.297 |
+| Min, next 5 days | 0.408 | 0.402 | **0.401** | 0.403 | **0.401** |
+| Max, next 21 days | 0.569 | 0.552 | **0.546** | 0.567 | 0.552 |
+| Min, next 21 days | **0.809** | 0.818 | 0.838 | 0.825 | 0.822 |
+
+Numbers from the run on data through 2026-11-24 (`run_range_models.py`, 2026-11-25). The first run,
+on data through 2026-10-23, differed only in the third decimal and gave the same ranking.
 
 **What this means**
 
@@ -104,7 +111,8 @@ Pinball loss ×100 (lower is better). Full tables: [`reports/range_results.md`](
   distance to recent highs / lows, then the weekly / monthly candle features. Candlestick
   patterns barely change the *direction* of the next week (all patterns: 53–61% up days vs 57%
   overall) but strong bearish candles do come before wider ranges.
-- **Bands are a bit too narrow for the min:** 80% bands cover the min 69–73% of the time (fat left tail).
+- **Bands are a bit too narrow for the min:** 80% bands cover the min 63–74% of the time (fat left tail).
+  The live check shows it clearly: the 21-day low after 2026-10-23 (6,883) fell below every model's 10% quantile.
   Conformal calibration of the band would be a natural next step.
 
 ## 8.6 Running it
