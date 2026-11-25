@@ -19,6 +19,7 @@ features.py       ->  data/processed/model_table.parquet   (features + labels + 
 - Align all series on the `^GSPC` trading calendar. Columns are prefixed (`gspc_close`, `spy_volume`, `es_close`, ...).
 - Forward-fill **prices** for at most 2 days, only on days a series has no row for. Volume is not filled.
 - Replace 4 suspected bad prints in `^GSPC` (1935–1961) with the midpoint of their neighbours; flagged in `gspc_bad_print_fixed`.
+- Replace 7 suspected bad SPY closes (1998–2009) with the index move scaled by the previous day's SPY/index ratio; flagged in `spy_bad_print_fixed`. A day qualifies when SPY is more than 1% off the index, the gap closes the next day, and ES (which also closed at 16:15) does not show the same gap. Days where ES does show it (e.g. 2008-10-13) are real late moves and are kept. SPY prices feed no model feature, so this only affects the confirmation of `^GSPC` bad prints and the processed file.
 - Flag ES futures roll windows (`es_roll_window = 1`).
 
 Why each rule exists, with evidence from the data: [02_data_understanding.md](02_data_understanding.md).

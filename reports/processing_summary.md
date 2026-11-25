@@ -1,35 +1,35 @@
 # Processing summary
 
-Generated 2026-11-25 19:31 by `process_data.py`.
+Generated 2026-11-25 19:54 by `process_data.py`.
 
 ## Outputs
 
 | Table | Rows | Columns | From | To |
 |---|---|---|---|---|
-| `sp500_daily` | 24,821 | 32 | 1927-12-30 | 2026-10-23 |
-| `model_table` | 24,821 | 34 | 1927-12-30 | 2026-10-23 |
+| `sp500_daily` | 24,843 | 33 | 1927-12-30 | 2026-11-24 |
+| `model_table` | 24,843 | 34 | 1927-12-30 | 2026-11-24 |
 
-Final holdout (do not use for tuning): 2022-01-01 onward, 1,207 rows.
+Final holdout (do not use for tuning): 2022-01-01 onward, 1,229 rows.
 
 ## Raw data quality
 
 | series | rows | start | end | non_positive_prices | flat_ohlc_rows | inconsistent_hlc_rows | zero_volume_rows | missing_close | moves_gt_15pct | largest_up_move | largest_down_move | largest_down_date | bad_prints_fixed |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| gspc | 24821 | 1927-12-30 | 2026-10-23 | 0 | 8547 | 0 | 5497 | 0 | 2 | 0.1537 | -0.229 | 1987-10-19 | 4 |
-| sp500tr | 9776 | 1988-01-04 | 2026-10-23 | 0 | 5379 | 0 | 9776 | 0 | 0 | 0.1096 | -0.1276 | 2020-03-16 | 0 |
-| spy | 8492 | 1993-01-29 | 2026-10-23 | 0 | 0 | 0 | 0 | 0 | 0 | 0.1356 | -0.1159 | 2020-03-16 | 0 |
-| es | 6590 | 2000-09-18 | 2026-10-23 | 0 | 0 | 10 | 11 | 0 | 0 | 0.132 | -0.1096 | 2020-03-16 | 0 |
-| vix | 9273 | 1990-01-02 | 2026-10-23 | 0 | 508 | 0 | 9273 | 0 | 321 | 0.7682 | -0.4424 | 2025-04-09 | 0 |
+| gspc | 24843 | 1927-12-30 | 2026-11-24 | 0 | 8547 | 0 | 5497 | 0 | 2 | 0.1537 | -0.229 | 1987-10-19 | 4 |
+| sp500tr | 9798 | 1988-01-04 | 2026-11-24 | 0 | 5379 | 0 | 9798 | 0 | 0 | 0.1096 | -0.1276 | 2020-03-16 | 0 |
+| spy | 8514 | 1993-01-29 | 2026-11-24 | 0 | 0 | 0 | 0 | 0 | 0 | 0.1356 | -0.1159 | 2020-03-16 | 7 |
+| es | 6612 | 2000-09-18 | 2026-11-24 | 0 | 0 | 10 | 11 | 0 | 0 | 0.132 | -0.1096 | 2020-03-16 | 0 |
+| vix | 9295 | 1990-01-02 | 2026-11-24 | 0 | 508 | 0 | 9295 | 0 | 327 | 0.7682 | -0.4424 | 2025-04-09 | 0 |
 
 ## Regimes
 
 | Label | Share of days | Episodes | Median length (days) | Longest (days) |
 |---|---|---|---|---|
-| `bear` | 20.9% | 27 | 168 | 437 |
-| `bear_merged` | 23.6% | 17 | 268 | 1366 |
+| `bear` | 20.8% | 27 | 168 | 437 |
+| `bear_merged` | 23.5% | 17 | 268 | 1366 |
 | `bear_recovery` | 50.6% | 12 | 390 | 6219 |
-| `stressed` | 22.0% | 266 | 7 | 256 |
-| `stressed_fixed` | 11.7% | 116 | 14 | 344 |
+| `stressed` | 22.0% | 267 | 7 | 256 |
+| `stressed_fixed` | 11.7% | 117 | 13 | 344 |
 
 - `bear`: **main label**. Standard 20% rule, peak to trough.
 - `bear_merged`: **robustness label**. `bear`, with bear markets merged when the rally between them lasts at most 126 trading days and stays below the starting peak.
@@ -51,7 +51,7 @@ Final holdout (do not use for tuning): 2022-01-01 onward, 1,207 rows.
 | 1990s | 29% | 3% |
 | 2000s | 32% | 18% |
 | 2010s | 16% | 7% |
-| 2020s | 19% | 12% |
+| 2020s | 20% | 12% |
 
 ### Bear markets found
 
@@ -91,39 +91,39 @@ Final holdout (do not use for tuning): 2022-01-01 onward, 1,207 rows.
 
 | Target | Non-missing | Share = 1 |
 |---|---|---|
-| `target_bear_h5` | 24,816 | 20.9% |
-| `target_bear_merged_h5` | 24,816 | 23.6% |
-| `target_stressed_h5` | 23,540 | 22.0% |
-| `target_stressed_fixed_h5` | 24,800 | 11.7% |
-| `target_bear_h21` | 24,800 | 20.9% |
-| `target_bear_merged_h21` | 24,800 | 23.6% |
-| `target_stressed_h21` | 23,540 | 22.0% |
-| `target_stressed_fixed_h21` | 24,800 | 11.7% |
+| `target_bear_h5` | 24,838 | 20.9% |
+| `target_bear_merged_h5` | 24,838 | 23.5% |
+| `target_stressed_h5` | 23,562 | 22.0% |
+| `target_stressed_fixed_h5` | 24,822 | 11.7% |
+| `target_bear_h21` | 24,822 | 20.9% |
+| `target_bear_merged_h21` | 24,822 | 23.6% |
+| `target_stressed_h21` | 23,562 | 22.0% |
+| `target_stressed_fixed_h21` | 24,822 | 11.7% |
 
 ## Feature availability
 
 | Feature | First valid date | Non-missing rows |
 |---|---|---|
-| `ret_1d` | 1928-01-03 | 24,820 |
-| `mom_1m` | 1928-01-31 | 24,800 |
-| `mom_3m` | 1928-04-02 | 24,758 |
-| `mom_6m` | 1928-07-02 | 24,695 |
-| `mom_12m` | 1929-01-03 | 24,569 |
-| `dist_ma50` | 1928-03-13 | 24,772 |
-| `dist_ma200` | 1928-10-16 | 24,622 |
-| `drawdown` | 1927-12-30 | 24,821 |
-| `rv_21d` | 1928-01-31 | 24,800 |
-| `rv_63d` | 1928-04-02 | 24,758 |
-| `parkinson_21d` | 1962-01-30 | 16,008 |
-| `garman_klass_21d` | 1962-01-30 | 16,008 |
-| `gap_open` | 1962-01-02 | 16,274 |
-| `spy_vol_ratio_20d` | 1993-02-26 | 8,473 |
-| `vix` | 1990-01-02 | 9,271 |
-| `vix_rv_spread` | 1990-01-02 | 9,271 |
-| `vix_chg_5d` | 1990-01-09 | 9,266 |
-| `es_ret_1d` | 2000-09-19 | 6,041 |
-| `below_peak_regime` | 1927-12-30 | 24,821 |
-| `rv_vs_5y_p80` | 1933-02-10 | 23,540 |
+| `ret_1d` | 1928-01-03 | 24,842 |
+| `mom_1m` | 1928-01-31 | 24,822 |
+| `mom_3m` | 1928-04-02 | 24,780 |
+| `mom_6m` | 1928-07-02 | 24,717 |
+| `mom_12m` | 1929-01-03 | 24,591 |
+| `dist_ma50` | 1928-03-13 | 24,794 |
+| `dist_ma200` | 1928-10-16 | 24,644 |
+| `drawdown` | 1927-12-30 | 24,843 |
+| `rv_21d` | 1928-01-31 | 24,822 |
+| `rv_63d` | 1928-04-02 | 24,780 |
+| `parkinson_21d` | 1962-01-30 | 16,030 |
+| `garman_klass_21d` | 1962-01-30 | 16,030 |
+| `gap_open` | 1962-01-02 | 16,296 |
+| `spy_vol_ratio_20d` | 1993-02-26 | 8,495 |
+| `vix` | 1990-01-02 | 9,293 |
+| `vix_rv_spread` | 1990-01-02 | 9,293 |
+| `vix_chg_5d` | 1990-01-09 | 9,288 |
+| `es_ret_1d` | 2000-09-19 | 6,063 |
+| `below_peak_regime` | 1927-12-30 | 24,843 |
+| `rv_vs_5y_p80` | 1933-02-10 | 23,562 |
 
 ## Checks (46 pass, 6 warn, 0 fail)
 
