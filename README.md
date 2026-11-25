@@ -14,18 +14,32 @@ The project follows a CRISP-DM–style workflow:
 | Phase | Document | Code |
 |---|---|---|
 | 1. Business understanding | [docs/01_business_understanding.md](docs/01_business_understanding.md) | – |
-| 2. Data understanding | [docs/02_data_understanding.md](docs/02_data_understanding.md) | `notebooks/00_data_understanding.ipynb`, `src/sp500/data_download.py` |
-| 3. Data preparation | [docs/03_data_preparation.md](docs/03_data_preparation.md) | `src/sp500/data_prep.py`, `labels.py`, `features.py` |
-| 4. Exploratory data analysis | [docs/04_eda.md](docs/04_eda.md) | `notebooks/01_eda.ipynb`, `run_statistical_tests.py` |
+| 2. Data understanding | [docs/02_data_understanding.md](docs/02_data_understanding.md) | `notebooks/01_data_understanding.ipynb`, `src/sp500/data_download.py` |
+| 3. Data preparation | [docs/03_data_preparation.md](docs/03_data_preparation.md) | `notebooks/02_data_preparation.ipynb`, `src/sp500/data_prep.py`, `labels.py`, `features.py` |
+| 4. Exploratory data analysis | [docs/04_eda.md](docs/04_eda.md) | `notebooks/03_eda.ipynb`, `04_statistical_tests.ipynb` |
 | 5. Future steps (plan & status) | [docs/05_future_steps.md](docs/05_future_steps.md) | – |
-| 6. Modeling & evaluation | [docs/06_modeling.md](docs/06_modeling.md) | `run_models.py`, `run_feature_groups.py`, `interpret_models.py`, `src/sp500/models.py` |
-| 7. Final evaluation (2022+ holdout) | [docs/07_final_evaluation.md](docs/07_final_evaluation.md) | `run_holdout.py` |
+| 6. Modeling & evaluation | [docs/06_modeling.md](docs/06_modeling.md) | `notebooks/05_regime_models.ipynb`, `06_feature_groups.ipynb`, `07_interpretation.ipynb` |
+| 7. Final evaluation (2022+ holdout) | [docs/07_final_evaluation.md](docs/07_final_evaluation.md) | `notebooks/08_holdout.ipynb` |
+| 8. Extension: min / max price + dashboard | [docs/08_price_range.md](docs/08_price_range.md) | `notebooks/09_…` to `15_…`, `dashboard/app.py` |
+| Related work | [docs/literature.md](docs/literature.md) | – |
 
 **Headline results:**
 - **Short-term stress is predictable.** For "stressed within 5 days", the models beat every baseline in 42 years of walk-forward validation (PR-AUC 0.93 vs. 0.78) **and** in the untouched 2022–2026 holdout (0.94–0.95 vs. 0.78; bootstrap 95% CI of the gain +0.10 to +0.28).
 - **One-month stress:** the models also lead (holdout 0.55–0.59 vs. 0.38–0.49) and are far better at predicting stress *starting* (onset PR-AUC 0.52–0.62 vs. 0.08), but the holdout is too short to make this conclusive.
 - **Bear-market starts are not predictable.** Models recognize bear markets after the fall has begun (2–3 weeks after the peak in 2022) and tie with a simple 200-day-moving-average rule.
-| Related work | [docs/literature.md](docs/literature.md) | – |
+
+## Extension: min / max price dashboard
+
+XGBoost, CatBoost and an LSTM predict the **highest and lowest S&P 500 price over the next 5 and 21 trading days** (10/50/90% quantiles), using the regime features plus candlestick pattern recognition and weekly / monthly candle features. Next-week ranges beat the volatility baseline in walk-forward and in the 2022+ holdout; next-month lows do not. Details: [docs/08_price_range.md](docs/08_price_range.md).
+
+```bash
+python run_range_models.py       # ~6 min
+streamlit run dashboard/app.py
+```
+
+## Notebooks
+
+Each phase has its own executed notebook in [`notebooks/`](notebooks/), numbered in the order to run them (`01` → `15`); outputs are visible directly on GitHub. Notebooks call the same code as the scripts (`src/sp500/` and the `run_*.py` files), so results match the reports.
 
 ## The whole project in one notebook
 
@@ -46,9 +60,23 @@ sp500-regime-prediction/
 ├── docs/              # one document per project phase
 │   └── figures/       # figures used in the docs
 ├── notebooks/
-│   ├── sp500_regime_prediction.ipynb  # THE WHOLE PROJECT in one notebook (already run)
-│   ├── 00_data_understanding.ipynb  # sources + quality (already run; results visible on GitHub)
-│   └── 01_eda.ipynb   # exploratory data analysis
+│   ├── 01_data_understanding.ipynb      # sources + quality
+│   ├── 02_data_preparation.ipynb        # cleaning, labels, features, checks
+│   ├── 03_eda.ipynb                     # exploratory data analysis
+│   ├── 04_statistical_tests.ipynb       # hypothesis tests
+│   ├── 05_regime_models.ipynb           # baselines, logreg, LightGBM, SVM (walk-forward)
+│   ├── 06_feature_groups.ipynb          # SPY volume / VIX tests
+│   ├── 07_interpretation.ipynb          # coefficients, SHAP, per-crisis results
+│   ├── 08_holdout.ipynb                 # final 2022+ test
+│   ├── 09_candlestick_patterns.ipynb    # pattern recognition
+│   ├── 10_candle_resampling.ipynb       # daily <-> weekly / monthly candles
+│   ├── 11_range_features_targets.ipynb  # min / max targets + feature table
+│   ├── 12_xgboost.ipynb                 # XGBoost quantile model
+│   ├── 13_catboost.ipynb                # CatBoost quantile model
+│   ├── 14_lstm.ipynb                    # LSTM
+│   ├── 15_range_model_comparison.ipynb  # comparison, forecast, dashboard inputs
+│   └── sp500_regime_prediction.ipynb    # the regime project (01-08) in one notebook
+├── dashboard/app.py   # Streamlit dashboard (min / max price)
 ├── reports/
 │   ├── processing_summary.md  # generated by process_data.py
 │   └── figures/       # saved plots
@@ -117,7 +145,7 @@ To refresh the raw data with the latest prices (this overwrites `data/raw/*.csv`
 python -m sp500.data_download
 ```
 
-Then open `notebooks/01_eda.ipynb`.
+Then open `notebooks/03_eda.ipynb`.
 
 ## Data
 

@@ -1,6 +1,6 @@
 # 4. Exploratory Data Analysis
 
-Notebook: [`notebooks/01_eda.ipynb`](../notebooks/01_eda.ipynb). Key figures are copied to [`docs/figures/`](figures/); all figures are written to `reports/figures/` when the notebook runs.
+Notebook: [`notebooks/03_eda.ipynb`](../notebooks/03_eda.ipynb). Key figures are copied to [`docs/figures/`](figures/); all figures are written to `reports/figures/` when the notebook runs.
 
 Data: cleaned `^GSPC` and the model table (1927-12-30 → 2026-10-23, 24,821 trading days), after the cleaning and label decisions in [03_data_preparation.md](03_data_preparation.md).
 
