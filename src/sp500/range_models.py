@@ -160,6 +160,7 @@ class LSTMQuantile:
         Xf, Yf = tensors(fit_pos)
         Xv, Yv = tensors(val_pos)
         best, best_state, bad = np.inf, None, 0
+        self.history = []  # validation pinball loss per epoch
         g = torch.Generator().manual_seed(SEED)
         for _ in range(self.epochs):
             net.train()
@@ -173,6 +174,7 @@ class LSTMQuantile:
             net.eval()
             with torch.no_grad():
                 v = loss_fn(net(Xv), Yv).item()
+            self.history.append(v)
             if v < best - 1e-5:
                 best, bad = v, 0
                 best_state = {k: t.clone() for k, t in net.state_dict().items()}

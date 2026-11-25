@@ -2,7 +2,7 @@
 
 This phase describes **where the data comes from** (sources) and **how good it is** (quality), using the raw snapshot in `data/raw/`. It was carried out after the cleaning code was written, so it also checks what cleaning changes, and it led to two fixes in the cleaning step.
 
-- **Full analysis, with code and outputs:** [`notebooks/00_data_understanding.ipynb`](../notebooks/00_data_understanding.ipynb). It is already run, so the results show on GitHub.
+- **Full analysis, with code and outputs:** [`notebooks/01_data_understanding.ipynb`](../notebooks/01_data_understanding.ipynb). It is already run, so the results show on GitHub.
 - **Figures:** [`docs/figures/`](figures/)
 
 ## 2.1 Sources

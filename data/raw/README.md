@@ -28,7 +28,7 @@ Complete daily history of the four core series, downloaded from Yahoo Finance on
 - **`^VIX`:** volume is always 0. Values before 2003 are back-calculated by CBOE with the current method. Downloaded separately, also on 2026-10-25. Checks: record closes 80.86 (2008-11-20) and 82.69 (2020-03-16), record low 9.14 (2017-11-03).
 - No duplicate dates in any file.
 
-The full quality analysis is in [`notebooks/00_data_understanding.ipynb`](../../notebooks/00_data_understanding.ipynb).
+The full quality analysis is in [`notebooks/01_data_understanding.ipynb`](../../notebooks/01_data_understanding.ipynb).
 
 Spot checks against known history: `^GSPC` closed at 224.84 on 1987-10-19 (Black Monday) and at 2,237.40 on 2020-03-23 (the COVID low).
 

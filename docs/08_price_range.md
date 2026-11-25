@@ -4,15 +4,17 @@ The regime models (chapters 1–7) answer "will the market be bear / stressed?".
 answers the professor's follow-up question: **how high and how low will the S&P 500 go over the
 next week and the next month?** Results are shown in an interactive dashboard.
 
-| Piece | File |
-|---|---|
-| Candlestick pattern recognition | `src/sp500/patterns.py` |
-| Candle resampling (daily ↔ weekly / monthly) | `src/sp500/candles.py` |
-| Features + min / max targets | `src/sp500/range_data.py` |
-| XGBoost, CatBoost, LSTM, baselines | `src/sp500/range_models.py` |
-| Training, validation, forecast | `run_range_models.py` |
-| Results | [`reports/range_results.md`](../reports/range_results.md) |
-| Dashboard | `dashboard/app.py` (`streamlit run dashboard/app.py`) |
+| Piece | Notebook | Code |
+|---|---|---|
+| Candlestick pattern recognition | [`09_candlestick_patterns`](../notebooks/09_candlestick_patterns.ipynb) | `src/sp500/patterns.py` |
+| Candle resampling (daily ↔ weekly / monthly) | [`10_candle_resampling`](../notebooks/10_candle_resampling.ipynb) | `src/sp500/candles.py` |
+| Features + min / max targets | [`11_range_features_targets`](../notebooks/11_range_features_targets.ipynb) | `src/sp500/range_data.py` |
+| XGBoost | [`12_xgboost`](../notebooks/12_xgboost.ipynb) | `src/sp500/range_models.py` |
+| CatBoost | [`13_catboost`](../notebooks/13_catboost.ipynb) | `src/sp500/range_models.py` |
+| LSTM | [`14_lstm`](../notebooks/14_lstm.ipynb) | `src/sp500/range_models.py` |
+| Comparison, forecast, dashboard inputs | [`15_range_model_comparison`](../notebooks/15_range_model_comparison.ipynb) | `run_range_models.py` |
+| Results | – | [`reports/range_results.md`](../reports/range_results.md) |
+| Dashboard | – | `dashboard/app.py` (`streamlit run dashboard/app.py`) |
 
 ![Dashboard: forecast tab](figures/dashboard_forecast.png)
 
