@@ -52,6 +52,9 @@ def clean_ohlcv(df: pd.DataFrame, name: str) -> tuple[pd.DataFrame, dict]:
             df["close"] < df["low"] * 0.9999
         )
         report["inconsistent_hlc_rows"] = int(bad_range.sum())
+        # Close outside [low, high]: the close matches the other sources (e.g. ES on expiry
+        # days, where Yahoo stores the settlement), so the intraday range is the bad part.
+        df.loc[bad_range, ["open", "high", "low"]] = np.nan
 
     if "volume" in df.columns:
         zero_vol = df["volume"] <= 0

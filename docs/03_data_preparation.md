@@ -14,6 +14,7 @@ features.py       ->  data/processed/model_table.parquet   (features + labels + 
 
 - Remove duplicate dates and sort.
 - Set non-positive prices to NaN; set rows where open = high = low = close to NaN for O/H/L (pre-1962 index data).
+- Set O/H/L to NaN on rows where the close lies outside [low, high]. This affects 10 ES days, mostly quarterly expiry Fridays where Yahoo stores the settlement price as the close; the close itself matches the other sources and is kept.
 - Set zero volume to NaN.
 - Align all series on the `^GSPC` trading calendar. Columns are prefixed (`gspc_close`, `spy_volume`, `es_close`, ...).
 - Forward-fill **prices** for at most 2 days, only on days a series has no row for. Volume is not filled.
