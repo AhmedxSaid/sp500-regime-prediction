@@ -13,6 +13,7 @@ import argparse
 import json
 from datetime import datetime, timezone
 
+import numpy as np
 import pandas as pd
 
 from .config import DATA_RAW, START_DATE, STOOQ_SYMBOLS, TICKERS
@@ -48,6 +49,40 @@ def download_stooq(symbol: str) -> pd.DataFrame:
     return _standardize(df)
 
 
+COLUMN_ORDER = ["open", "high", "low", "close", "adj_close", "volume"]
+SESSION_DONE_NY =(17, 15)  # ES settles at 17:00 New York time; cash markets close at 16:00
+
+
+def drop_unfinished_session(df: pd.DataFrame, name: str) -> pd.DataFrame:
+    """Drop today's row while the New York session is still running.
+
+    During trading hours Yahoo returns a row for today whose close is the latest price,
+    not the final close, and whose volume is only partial.
+    """
+    now_ny = pd.Timestamp.now(tz="America/New_York")
+    if (now_ny.hour, now_ny.minute) >= SESSION_DONE_NY:
+        return df
+    today = now_ny.normalize().tz_localize(None)
+    unfinished = df.index >= today
+    if unfinished.any():
+        print(f"[note] {name}: dropped {int(unfinished.sum())} row(s) for today's unfinished session")
+    return df[~unfinished]
+
+
+def blank_flat_ohl(df: pd.DataFrame) -> tuple[pd.DataFrame, int]:
+    """Empty open/high/low on rows where open = high = low = close.
+
+    Yahoo fills O/H/L with the close when only a close exists (^GSPC before 1962, ^VIX
+    1990-91, ^SP500TR before 2009), so high = low there is a placeholder, not a real range.
+    """
+    if not {"open", "high", "low", "close"}.issubset(df.columns):
+        return df, 0
+    flat = (df["open"] == df["high"]) & (df["high"] == df["low"]) & (df["low"] == df["close"])
+    df = df.copy()
+    df.loc[flat, ["open", "high", "low"]] = np.nan
+    return df, int(flat.sum())
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", choices=["yahoo", "stooq"], default="yahoo")
@@ -76,10 +111,17 @@ def main() -> None:
                 print(f"[error] {name}: {exc}")
                 continue
 
+        df = drop_unfinished_session(df, name)
         path = DATA_RAW / f"{name}.csv"
         price_cols = [c for c in ("open", "high", "low", "close", "adj_close") if c in df.columns]
         df[price_cols] = df[price_cols].round(4)  # Yahoo stores float32; drop the noise digits
-        df.to_csv(path, date_format="%Y-%m-%d")
+        df, n_flat = blank_flat_ohl(df)
+        if n_flat:
+            print(f"[note] {name}: emptied open/high/low on {n_flat} close-only rows")
+        # Fixed column order and "\n" line endings, so a refresh only diffs the changed rows
+        # (newer yfinance returns columns alphabetically; pandas on Windows writes "\r\n").
+        order = [c for c in COLUMN_ORDER if c in df.columns] + [c for c in df.columns if c not in COLUMN_ORDER]
+        df[order].to_csv(path, date_format="%Y-%m-%d", lineterminator="\n")
         meta["series"][name] = {
             "source": source,
             "symbol": yahoo_symbol if source == "yahoo" else STOOQ_SYMBOLS[name],

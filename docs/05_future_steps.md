@@ -1,13 +1,13 @@
 # 5. Future Steps
 
-## Status (2026-10-25)
+## Status (2026-11-25)
 
 | Step | Status |
 |---|---|
 | 5.1 Validation design | ✅ Done: `validation.py` + per-fold bear labels in `models.py` |
 | 5.2 Baselines | ✅ Done: no change, 200-day MA rule, 2-state HMM |
 | 5.3 Models: logistic regression, LightGBM, SVM | ✅ Done. Results in [06_modeling.md](06_modeling.md) |
-| 5.3 LSTM | ⏸ Not needed: simple models already match LightGBM |
+| 5.3 LSTM | ⏸ Not needed for regimes: simple models already match LightGBM. (Used in the min / max extension, 5.8.) |
 | 5.4 Evaluation: PR-AUC, onset PR-AUC, Brier, flips, lead time | ✅ Done |
 | 5.4 Per-crisis results | ✅ Done: 15 stress crises, 7 bear markets ([06_modeling.md](06_modeling.md)) |
 | 5.5 Interpretation (coefficients / SHAP) | ✅ Done: `interpret_models.py` |
@@ -16,6 +16,10 @@
 | 5.6 Literature extensions | ⬜ Optional |
 | 5.7 Final holdout (2022+) | ✅ Done once, 2026-10-27 ([07_final_evaluation.md](07_final_evaluation.md)) |
 | 5.7 Final written report / presentation | ✅ Done: written report (Claude Doc) and 16-slide deck, 2026-10-27 |
+| 5.8 Extension: min / max price (XGBoost, CatBoost, LSTM) + dashboard | ✅ Done ([08_price_range.md](08_price_range.md)) |
+| 5.9 Data refresh to 2026-11-24 + quality fixes (ES range, SPY bad closes, close-only rows) | ✅ Done, 2026-11-25; regime reports unchanged (holdout capped at `HOLDOUT_END`) |
+| 5.9 Live check on the days after the 2026-10-23 snapshot | ✅ First run 2026-11-25 ([`reports/live_check.md`](../reports/live_check.md)); re-run after each refresh |
+| 5.10 Calibrate the min / max bands (conformal) | ⬜ Next: the 80% bands cover the low only 63–74% of the time |
 
 ## 5.1 Validation design
 
@@ -63,3 +67,17 @@
 - Model vs. baselines table (walk-forward and holdout).
 - A timeline of predicted probabilities against the actual regimes.
 - Limitations: few bear markets in the sample, dependence on the label choice, and regime shifts in market structure.
+
+## 5.8 Extension: min / max price
+
+Done; see [08_price_range.md](08_price_range.md). Quantile models for the highest and lowest price over the next 5 and 21 days, validated walk-forward 2000–2021 and on the 2022+ holdout, shown in `dashboard/app.py`.
+
+## 5.9 Keeping the results honest on new data
+
+- The 2022+ regime holdout was used once, on data through **2026-10-23** (`HOLDOUT_END` in `config.py`). `run_holdout.py` and `run_statistical_tests.py` stop there, so refreshed data reproduces the published numbers.
+- Every later day is genuinely new. After each refresh, run `python run_live_check.py`: it trains only on data known before 2026-10-23 and scores every forecast made since.
+- The first live check covers 23 days and one stress onset, so it is a sanity check, not a new accuracy estimate. Re-running it as data arrives builds a real out-of-sample record.
+
+## 5.10 Next: calibrated min / max bands
+
+The 80% bands are too narrow for the low (fat left tail; the 21-day low after 2026-10-23 fell below every model's 10% quantile). Conformal calibration on the walk-forward residuals would widen them in a principled way. Fit it on 2000–2021 only and check it on the holdout and the live check.

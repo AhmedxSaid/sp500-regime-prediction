@@ -45,13 +45,18 @@ def clean_ohlcv(df: pd.DataFrame, name: str) -> tuple[pd.DataFrame, dict]:
     if {"open", "high", "low", "close"}.issubset(df.columns):
         # Before ~1962 Yahoo stores ^GSPC open/high/low equal to the close
         flat = (df["open"] == df["high"]) & (df["high"] == df["low"]) & (df["low"] == df["close"])
-        report["flat_ohlc_rows"] = int(flat.sum())
+        # data_download already empties these O/H/L, so count close-only rows as well
+        close_only = df[["open", "high", "low"]].isna().all(axis=1) & df["close"].notna()
+        report["flat_ohlc_rows"] = int((flat | close_only).sum())
         df.loc[flat, ["open", "high", "low"]] = np.nan
 
         bad_range = (df["high"] < df["low"]) | (df["close"] > df["high"] * 1.0001) | (
             df["close"] < df["low"] * 0.9999
         )
         report["inconsistent_hlc_rows"] = int(bad_range.sum())
+        # Close outside [low, high]: the close matches the other sources (e.g. ES on expiry
+        # days, where Yahoo stores the settlement), so the intraday range is the bad part.
+        df.loc[bad_range, ["open", "high", "low"]] = np.nan
 
     if "volume" in df.columns:
         zero_vol = df["volume"] <= 0
@@ -101,6 +106,53 @@ def find_bad_prints(
         confirmed = (np.sign(ro) == np.sign(r)) & (ro.abs() > 0.5 * r.abs())
         spike &= ~confirmed
     return spike.fillna(False).astype(bool)
+
+
+def quarterly_expiry(index: pd.DatetimeIndex) -> np.ndarray:
+    """True on the 3rd Friday of Mar/Jun/Sep/Dec (ES expiry; day 15-21 and a Friday)."""
+    return np.asarray(index.month.isin([3, 6, 9, 12]) & (index.weekday == 4)
+                      & (index.day >= 15) & (index.day <= 21))
+
+
+def find_tracker_bad_prints(
+    tracker: pd.Series,
+    index: pd.Series,
+    confirm: pd.Series | None = None,
+    min_gap: float = 0.01,
+    window: int = 20,
+    confirm_share: float = 1 / 3,
+) -> pd.Series:
+    """Flag one-day bad closes in a series that tracks `index` (e.g. SPY vs ^GSPC).
+
+    The log ratio tracker/index normally drifts slowly (dividends, fees). A day is flagged when
+      - the ratio is more than `min_gap` away from its median over the previous `window` days,
+      - the gap closes the next day (less than half of it is left),
+      - and `confirm` (e.g. ES, which also closed at 16:15) does not show a gap of the same sign
+        and at least `confirm_share` of the size; then the gap is a real late move, not a bad print.
+    Applied twice, because a bad print sometimes sits next to another one (SPY, 2000-01-06/07).
+    """
+    tracker = tracker.copy()
+    flag = pd.Series(False, index=tracker.index)
+    for _ in range(2):
+        lr = np.log(tracker / index)
+        gap = lr - lr.rolling(window, min_periods=5).median().shift(1)
+        nxt = gap.shift(-1)
+        bad = (gap.abs() > min_gap) & (nxt.abs() < 0.5 * gap.abs())
+        if confirm is not None:
+            lc = np.log(confirm.reindex(index.index) / index)
+            cgap = lc - lc.rolling(window, min_periods=5).median().shift(1)
+            bad &= ~((np.sign(cgap) == np.sign(gap)) & (cgap.abs() > confirm_share * gap.abs()))
+            # On quarterly expiry Fridays the ES close is a settlement price and cannot
+            # confirm or reject anything, so leave those days alone.
+            has_confirm = lc.notna()
+            bad &= ~(has_confirm & quarterly_expiry(index.index))
+        bad = bad.fillna(False) & ~flag
+        if not bad.any():
+            break
+        # Replace with the index move scaled by the previous day's ratio
+        tracker[bad] = (index * (tracker / index).shift(1))[bad]
+        flag |= bad
+    return flag
 
 
 def es_roll_window(index: pd.DatetimeIndex, days_before_expiry: int = 8, half_width: int = 2) -> pd.Series:
@@ -169,8 +221,28 @@ def build_dataset() -> tuple[pd.DataFrame, pd.DataFrame]:
         print(f"[fix] {int(bad.sum())} suspected bad prints in gspc_close replaced: "
               + ", ".join(str(d.date()) for d in data.index[bad]))
     data["gspc_bad_print_fixed"] = bad.astype("int8")
+    fixed_counts = {"gspc": int(bad.sum())}
+
+    # SPY: one-day closes off the index that reverse the next day and that ES does not show
+    # (mostly 1998-2001 AMEX prints). Replace the close with the index move, scale adj_close by
+    # the same factor, and drop O/H/L only if the new close falls outside them.
+    if "spy_close" in data.columns:
+        es = data["es_close"] if "es_close" in data.columns else None
+        spy_bad = find_tracker_bad_prints(data["spy_close"], data["gspc_close"], es)
+        if spy_bad.any():
+            ratio_prev = (data["spy_close"] / data["gspc_close"]).shift(1)
+            new_close = (data["gspc_close"] * ratio_prev).round(4)
+            scale = new_close / data["spy_close"]
+            data.loc[spy_bad, "spy_adj_close"] = (data["spy_adj_close"] * scale)[spy_bad].round(4)
+            data.loc[spy_bad, "spy_close"] = new_close[spy_bad]
+            outside = spy_bad & ((data["spy_close"] > data["spy_high"]) | (data["spy_close"] < data["spy_low"]))
+            data.loc[outside, ["spy_open", "spy_high", "spy_low"]] = np.nan
+            print(f"[fix] {int(spy_bad.sum())} suspected bad prints in spy_close replaced: "
+                  + ", ".join(str(d.date()) for d in data.index[spy_bad]))
+        data["spy_bad_print_fixed"] = spy_bad.astype("int8")
+        fixed_counts["spy"] = int(spy_bad.sum())
     for rep in reports:
-        rep["bad_prints_fixed"] = int(bad.sum()) if rep["series"] == "gspc" else 0
+        rep["bad_prints_fixed"] = fixed_counts.get(rep["series"], 0)
 
     if "es" in frames:
         data["es_roll_window"] = es_roll_window(calendar)

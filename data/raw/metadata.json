@@ -1,0 +1,80 @@
+{
+  "downloaded_at_utc": "2026-11-25T18:38:47.546937+00:00",
+  "series": {
+    "gspc": {
+      "source": "yahoo",
+      "symbol": "^GSPC",
+      "rows": 24843,
+      "start": "1927-12-30",
+      "end": "2026-11-24",
+      "columns": [
+        "adj_close",
+        "close",
+        "high",
+        "low",
+        "open",
+        "volume"
+      ]
+    },
+    "sp500tr": {
+      "source": "yahoo",
+      "symbol": "^SP500TR",
+      "rows": 9798,
+      "start": "1988-01-04",
+      "end": "2026-11-24",
+      "columns": [
+        "adj_close",
+        "close",
+        "high",
+        "low",
+        "open",
+        "volume"
+      ]
+    },
+    "spy": {
+      "source": "yahoo",
+      "symbol": "SPY",
+      "rows": 8514,
+      "start": "1993-01-29",
+      "end": "2026-11-24",
+      "columns": [
+        "adj_close",
+        "close",
+        "high",
+        "low",
+        "open",
+        "volume"
+      ]
+    },
+    "es": {
+      "source": "yahoo",
+      "symbol": "ES=F",
+      "rows": 6612,
+      "start": "2000-09-18",
+      "end": "2026-11-24",
+      "columns": [
+        "adj_close",
+        "close",
+        "high",
+        "low",
+        "open",
+        "volume"
+      ]
+    },
+    "vix": {
+      "source": "yahoo",
+      "symbol": "^VIX",
+      "rows": 9295,
+      "start": "1990-01-02",
+      "end": "2026-11-24",
+      "columns": [
+        "adj_close",
+        "close",
+        "high",
+        "low",
+        "open",
+        "volume"
+      ]
+    }
+  }
+}

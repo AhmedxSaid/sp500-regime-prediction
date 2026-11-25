@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sp500"
 version = "0.1.0"
-description = "S&P 500 market regime prediction (bull/bear, calm/stressed)"
+description = "S&P 500 market regime prediction (bull/bear, calm/stressed) and min/max price range forecasts"
 requires-python = ">=3.10"
 
 [tool.setuptools.packages.find]
