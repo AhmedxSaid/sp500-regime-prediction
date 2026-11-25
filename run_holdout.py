@@ -2,7 +2,8 @@
 
 Setup (unchanged from validation): FEATURES_MAIN (13), training from 1962, yearly walk-forward
 (refit each January on all earlier data, 21-day gap), all baselines and models, all 4 labels,
-horizons 5 and 21 days. Test years 2022 through the last date with a known target.
+horizons 5 and 21 days. Test years 2022 through config.HOLDOUT_END (2026-10-23, the data the
+one-time test used); days after it are scored by run_live_check.py.
 
 The models are fitted only once. To rebuild the report from the saved predictions without
 refitting, use --report-only.
@@ -34,11 +35,12 @@ sys.path.insert(0, str(ROOT))
 
 from interpret_models import signal_offset  # noqa: E402
 from sp500.config import (  # noqa: E402
-    DATA_PROCESSED, FEATURES_MAIN, HOLDOUT_START, HORIZONS, MODEL_START, REPORTS, WALK_FORWARD_GAP,
+    DATA_PROCESSED, FEATURES_MAIN, HOLDOUT_END, HOLDOUT_START, HORIZONS, MODEL_START, REPORTS, WALK_FORWARD_GAP,
 )
 from sp500.features import bear_price_series  # noqa: E402
 from sp500.labels import episodes  # noqa: E402
 from sp500.models import BASELINES, MODELS, run_walk_forward, score  # noqa: E402
+from sp500.validation import truncate_at  # noqa: E402
 
 LABELS = ("bear", "stressed", "bear_merged", "stressed_fixed")
 NAMES = {"persistence": "Baseline: no change", "ma200_rule": "Baseline: price < 200-day MA",
@@ -76,8 +78,10 @@ def main() -> int:
     parser.add_argument("--report-only", action="store_true", help="rebuild the report from saved predictions")
     args = parser.parse_args()
 
-    table = pd.read_parquet(DATA_PROCESSED / "model_table.parquet")
-    daily = pd.read_parquet(DATA_PROCESSED / "sp500_daily.parquet")
+    # The holdout test was run once on data through HOLDOUT_END; stop there so a re-run on
+    # refreshed data reproduces it (later days belong to run_live_check.py).
+    table = truncate_at(pd.read_parquet(DATA_PROCESSED / "model_table.parquet"), HOLDOUT_END)
+    daily = pd.read_parquet(DATA_PROCESSED / "sp500_daily.parquet").loc[:HOLDOUT_END]
     first_year = pd.Timestamp(HOLDOUT_START).year
     pred_path = DATA_PROCESSED / "predictions_holdout.parquet"
 

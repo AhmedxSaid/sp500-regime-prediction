@@ -1,6 +1,6 @@
 # Live check
 
-Generated 2026-11-25 20:15 by `run_live_check.py` (0.7 min). Models trained only on data known before **2026-10-23** (the last day of the snapshot every other result used); forecasts made at each close from 2026-10-23 to 2026-11-24 (23 trading days). Same features, settings and gaps as validation; nothing tuned.
+Generated 2026-11-25 20:49 by `run_live_check.py` (0.6 min). Models trained only on data known before **2026-10-23** (the last day of the data every regime result used); forecasts made at each close from 2026-10-23 to 2026-11-24 (23 trading days). Same features, settings and gaps as validation; nothing tuned.
 
 S&P 500: 7,624 at the cut-off → 7,201 on 2026-11-24 (-5.5%); lowest close 6,910 on 2026-11-20.
 

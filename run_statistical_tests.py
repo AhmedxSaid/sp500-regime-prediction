@@ -30,7 +30,8 @@ from statsmodels.stats.diagnostic import acorr_ljungbox
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from sp500.config import DATA_PROCESSED, HOLDOUT_START, MODEL_START, REPORTS  # noqa: E402
+from sp500.config import DATA_PROCESSED, HOLDOUT_END, HOLDOUT_START, MODEL_START, REPORTS  # noqa: E402
+from sp500.validation import truncate_at  # noqa: E402
 
 VALIDATION = (MODEL_START[:4], str(pd.Timestamp(HOLDOUT_START).year - 1))  # 1962-2021
 
@@ -47,8 +48,10 @@ def mann_whitney(x: pd.Series, group: pd.Series) -> dict:
 
 
 def main() -> int:
-    table = pd.read_parquet(DATA_PROCESSED / "model_table.parquet")
-    daily = pd.read_parquet(DATA_PROCESSED / "sp500_daily.parquet")
+    sys.stdout.reconfigure(errors="replace")  # the summary has non-ASCII (chi-square); never crash on print
+    # Same data as the one-time holdout test (through HOLDOUT_END), so refreshed data reproduces it
+    table = truncate_at(pd.read_parquet(DATA_PROCESSED / "model_table.parquet"), HOLDOUT_END)
+    daily = pd.read_parquet(DATA_PROCESSED / "sp500_daily.parquet").loc[:HOLDOUT_END]
     r = np.log(daily["gspc_close"]).diff().dropna()
     val = table.loc[VALIDATION[0]:VALIDATION[1]]
 
